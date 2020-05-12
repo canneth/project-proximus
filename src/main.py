@@ -1,6 +1,11 @@
 
 import sim
 
+from Leg import Leg
+from Collywobble import Collywobble
+
+from math import pi as PI
+
 if __name__ == "__main__":
     ### BEGIN SIM CONNECTION ###
     connection_successful = False
@@ -108,14 +113,24 @@ if __name__ == "__main__":
             front_left_leg,
             front_right_leg,
             back_left_leg,
-            back_right_leg,
+            back_right_leg
         )
 
         print("Setup done, entering while loop...")
 
+        phase = 0
+        base_phase_step = 0.01
+
         ### LOOP ###
         while True:
-            robot.simStep()
+            if phase >= 2*PI:
+                phase = phase - 2*PI
+            robot.front_left_leg.gaitPhase(phase = phase)
+            robot.front_right_leg.gaitPhase(phase = phase)
+            # TODO: Fix this:
+            robot.back_left_leg.gaitPhase(phase = phase) # NANs happening, not moving
+            robot.back_right_leg.gaitPhase(phase = phase) # NANs happening, not moving
+            phase = phase + base_phase_step
             pass
 
 

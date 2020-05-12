@@ -7,6 +7,8 @@ from math import pi as PI
 
 import time
 
+import matplotlib.pyplot as plt
+
 class Leg:
     def __init__(
         self,
@@ -18,7 +20,8 @@ class Leg:
         femur,
         tibia_joint,
         tibia,
-        foot
+        foot,
+        foot_origin = [0, 0, 0]
     ):
 
         self.client_id = client_id
@@ -30,6 +33,7 @@ class Leg:
         self.tibia_joint = tibia_joint
         self.tibia = tibia
         self.foot = foot
+        self.foot_origin = foot_origin
 
         # Getting constants for ik calculation
         _, self.d = sim.simxGetObjectPosition(self.client_id, self.coxa_joint, self.body_frame, sim.simx_opmode_blocking)
@@ -124,6 +128,36 @@ class Leg:
         _ = sim.simxSetJointTargetPosition(self.client_id, self.femur_joint, theta_2, sim.simx_opmode_streaming)
         _ = sim.simxSetJointTargetPosition(self.client_id, self.tibia_joint, theta_3, sim.simx_opmode_streaming)
 
+    def gaitPhase(self, phase, stride_length = 0.12, swing_height = 0.08, swing_to_stance_speed_ratio = 2):
+        """
+        DESCRIPTION:
+        Moves the leg to the position in its trajectory as dictated by the phase.
+        ARGUMENTS:
+        + phase: The phase specifying the position in the leg's trajectory to send the foot to.
+        """
+        foot_pos = [0, 0, 0]
+
+        if ((phase <= PI/2 and phase >= 0) or (phase >= (3/2)*PI and phase <= 2*PI)):
+            # Stance phase
+            foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
+            foot_y = self.foot_origin[1]
+            foot_z = self.foot_origin[2]
+            foot_pos = [foot_x, foot_y, foot_z]
+            # Slower during stance phase
+            # TODO: Slow down phase
+        else:
+            # Swing phase
+            foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
+            foot_y = self.foot_origin[1]
+            foot_z = self.foot_origin[2] - swing_height*np.cos(phase)
+            foot_pos = [foot_x, foot_y, foot_z]
+            # Faster during swing phase
+            # TODO: Speed up phase
+        
+        self.moveFoot(foot_pos)
+
+
+
 if __name__ == "__main__":
     
     ### BEGIN SIM CONNECTION ###
@@ -161,7 +195,8 @@ if __name__ == "__main__":
             front_left_femur,
             front_left_tibia_joint,
             front_left_tibia,
-            front_left_foot
+            front_left_foot,
+            foot_origin = [0.2, 0.1, -0.225]
         )
 
         print("Setup done, entering while loop...")
@@ -173,10 +208,6 @@ if __name__ == "__main__":
         print("foot_pos: {0}".format(foot_pos))
 
         # TODO: For some reason there seems to be a massive loss of precision in the IK (a consistent error of up to 7 degress in the IK results)
-
-        ### LOOP ###
-        while True:
-            pass
 
         ### CLOSE CONNECTION TO SIM ###
         sim.simxGetPingTime(client_id)

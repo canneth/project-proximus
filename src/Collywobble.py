@@ -23,6 +23,19 @@ class Collywobble:
         self.back_left_leg = back_left_leg
         self.back_right_leg = back_right_leg
 
+        self.stance_polygon_length = 0.4
+        self.stance_polygon_width = 0.2
+        self.stance_height = 0.225
+
+        self.stride_length = 0.120
+        self.swing_height = 0.08
+        self.swing_to_stance_speed_ratio = 2
+
+        self.front_left_leg.foot_origin = [self.stance_polygon_length/2, self.stance_polygon_width/2, -self.stance_height]
+        self.front_right_leg.foot_origin = [self.stance_polygon_length/2, -self.stance_polygon_width/2, -self.stance_height]
+        self.back_left_leg.foot_origin = [-self.stance_polygon_length/2, self.stance_polygon_width/2, -self.stance_height]
+        self.back_right_leg.foot_origin = [-self.stance_polygon_length/2, -self.stance_polygon_width/2, -self.stance_height]
+
     def __repr__(self):
         print("An instance of the custom Collywobble class.")
 
