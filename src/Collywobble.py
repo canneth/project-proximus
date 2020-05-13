@@ -1,13 +1,15 @@
 
 import sim
 
+import numpy as np
+from numpy.linalg import norm
 from math import pi as PI
 
 from Leg import Leg
 from Accelerometer import Accelerometer
 from Gyrosensor import Gyrosensor
 
-# from simple_pid import PID
+from simple_pid import PID
 
 class Collywobble:
     def __init__(
@@ -120,36 +122,21 @@ class Collywobble:
     def __repr__(self):
         print("An instance of the custom Collywobble class.")
 
-    def moveToPhaseInTrotGait(self, phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
-        """
-        DESCRIPTION:
-        Move all legs to their respective phases to effect a trot gait, coordinated by the specified gait phase.
-
-        ARGUMENTS:
-        + phase: The phase angle dictating the phase of the gait.
-        """
-        print("### Moving front_left_leg ###")
-        self.front_left_leg.moveToPhase(phase = phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        print("### Moving front_right_leg ###")
-        self.front_right_leg.moveToPhase(phase = phase + PI, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        print("### Moving back_left_leg ###")
-        self.back_left_leg.moveToPhase(phase = phase + PI, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        print("### Moving back_right_leg ###")
-        self.back_right_leg.moveToPhase(phase = phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-
-    def moveToPhaseInTrotGaitStabilised(self, phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
+    def moveToPhaseInTrotTranslate(self, phase, direction_vector = [1, 0], stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
         """
         DESCIRPTION:
         Moves all legs to their respective phases to effect a trot gait, where each foot's position is augmented by stability controllers.
 
         ARGUMENTS:
         + phase: The phase in the gait cycle.
+        + direction_vector: The direction in which to translate. The direction vector is normalised within this function.
         """
+        direction_vec = direction_vector/norm(direction_vector)
         # Raw gait foot positions
-        front_left_foot_neutral_pos = self.front_left_leg.getFootPositionAtPhase(phase = phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        front_right_foot_neutral_pos = self.front_right_leg.getFootPositionAtPhase(phase = phase + PI, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        back_left_foot_neutral_pos = self.back_left_leg.getFootPositionAtPhase(phase = phase + PI, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        back_right_foot_neutral_pos = self.back_right_leg.getFootPositionAtPhase(phase = phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
+        front_left_foot_neutral_pos = self.front_left_leg.getFootPositionAtPhase(phase = phase, direction_vector = direction_vec, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
+        front_right_foot_neutral_pos = self.front_right_leg.getFootPositionAtPhase(phase = phase + PI, direction_vector = direction_vec, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
+        back_left_foot_neutral_pos = self.back_left_leg.getFootPositionAtPhase(phase = phase + PI, direction_vector = direction_vec, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
+        back_right_foot_neutral_pos = self.back_right_leg.getFootPositionAtPhase(phase = phase, direction_vector = direction_vec, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
         
         # Apply controller offsets
         front_left_foot_pos, front_right_foot_pos, back_left_foot_pos, back_right_foot_pos = \
@@ -193,32 +180,50 @@ class Collywobble:
 
         accel_x = self.accelerometer.getX()
         accel_y = self.accelerometer.getY()
-        pitch_control_value = 0*accel_x
-        roll_control_value = 0.005*accel_y
+
+        roll_pid = PID(0.004, 0.003, 0, setpoint = 0)
+        pitch_pid = PID(0.0001, 0.0001, 0, setpoint = 0)
+        roll_control_value = roll_pid(accel_y)
+        pitch_control_value = pitch_pid(accel_x)
 
         front_left_foot_pos = front_left_foot_pos_before.copy()
         front_right_foot_pos = front_right_foot_pos_before.copy()
         back_left_foot_pos = back_left_foot_pos_before.copy()
         back_right_foot_pos = back_right_foot_pos_before.copy()
 
-
         ### ROLL CONTROL ###
         # When accel_y is +ve, the robot is rolling towards the left; -ve, rolling towards the right.
         # Hence, when accel_y is +ve, left legs should extend, right legs flex.
+        # When accel_y is +ve, the error wrt setpoint is -ve, so roll_control_value will be -ve.
+        # When accel_y is -ve, the error wrt setpoint is +ve, so roll_control_value will be +ve.
+        # Hence, robot is rolling towards the left, roll_control_value will be -ve.
         # Note that extension of legs is in the -ve z-direction.
-        front_left_foot_pos[2] = front_left_foot_pos[2] - roll_control_value
-        front_right_foot_pos[2] = front_right_foot_pos[2] + roll_control_value
-        back_left_foot_pos[2] = back_left_foot_pos[2] - roll_control_value
-        back_right_foot_pos[2] = back_right_foot_pos[2] + roll_control_value
+        front_left_foot_pos[2] = front_left_foot_pos[2] - (-roll_control_value)
+        front_right_foot_pos[2] = front_right_foot_pos[2] + (-roll_control_value)
+        back_left_foot_pos[2] = back_left_foot_pos[2] - (-roll_control_value)
+        back_right_foot_pos[2] = back_right_foot_pos[2] + (-roll_control_value)
+
+        # ### STANCE-WIDENING APPROACH ###
+        # # Widen stance by a factor scaling with error magnitude
+        # # Left feet move in the +ve y-direction; Right feet move in the -ve y-direction.
+        # stance_width_pid = PID(0.02, 0.004, 0, setpoint = 0)
+        # stance_width_augmenting_factor = stance_width_pid(accel_y)
+        # front_left_foot_pos[1] = front_left_foot_pos[1] + abs(stance_width_augmenting_factor)
+        # front_right_foot_pos[1] = front_right_foot_pos[1] - abs(stance_width_augmenting_factor)
+        # back_left_foot_pos[1] = back_left_foot_pos[1] + abs(stance_width_augmenting_factor)
+        # back_right_foot_pos[1] = back_right_foot_pos[1] - abs(stance_width_augmenting_factor)
 
         ### PITCH CONTROL ###
         # When accel_x is +ve, the robot is pitching forwards; -ve, pitching backwards.
         # Hence, when accel_x is +ve, front legs should extend, back legs flex.
+        # When accel_x is +ve, the error wrt setpoint is -ve, so pitch_control_value will be -ve.
+        # When accel_x is -ve, the error wrt setpoint is +ve, so pitch_control_value will be +ve.
+        # Hence, robot is pitching forwards, pitch_control_value will be -ve.
         # Note that extension of legs is in the -ve z-direction.
-        front_left_foot_pos[2] = front_left_foot_pos[2] - pitch_control_value
-        front_right_foot_pos[2] = front_right_foot_pos[2] - pitch_control_value
-        back_left_foot_pos[2] = back_left_foot_pos[2] + pitch_control_value
-        back_right_foot_pos[2] = back_right_foot_pos[2] + pitch_control_value
+        front_left_foot_pos[2] = front_left_foot_pos[2] - (-pitch_control_value)
+        front_right_foot_pos[2] = front_right_foot_pos[2] - (-pitch_control_value)
+        back_left_foot_pos[2] = back_left_foot_pos[2] + (-pitch_control_value)
+        back_right_foot_pos[2] = back_right_foot_pos[2] + (-pitch_control_value)
         
         # print("accel_x: {} | x_control_value: {} | accel_y: {} | y_control_value: {}".format(accel_x, x_control_value, accel_y, y_control_value))
 

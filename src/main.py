@@ -4,6 +4,7 @@ import sim
 from Leg import Leg
 from Collywobble import Collywobble
 
+import numpy as np
 from math import pi as PI
 
 import time
@@ -29,7 +30,7 @@ if __name__ == "__main__":
         # Robot
         robot = Collywobble(
             client_id,
-            stance_polygon_width = 0.15
+            stance_polygon_width = 0.2
         )
 
         print("Setup done, entering while loop...")
@@ -55,14 +56,20 @@ if __name__ == "__main__":
         phase = 0
         base_phase_step = 0.005
 
+        direction_phase = 0
+        direction_phase_step = 0.00008
+
         ### LOOP ###
         while True:
+            circle_direction = [np.cos(direction_phase), np.sin(direction_phase)]
             if phase >= 2*PI:
                 phase = phase - 2*PI
-            robot.moveToPhaseInTrotGaitStabilised(phase, stride_length = 0.05, swing_height = 0.1, swing_to_stance_ratio = 1)
+            if direction_phase >= 2*PI:
+                direction_phase = direction_phase - 2*PI
+            robot.moveToPhaseInTrotTranslate(phase, direction_vector = [0, 1], stride_length = 0.08, swing_height = 0.1, swing_to_stance_ratio = 0.5)
             phase = phase + base_phase_step
+            direction_phase = direction_phase + direction_phase_step
             pass
-
 
         ### CLOSE CONNECTION TO SIM ###
         sim.simxGetPingTime(client_id)

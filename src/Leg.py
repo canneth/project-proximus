@@ -2,6 +2,7 @@
 import sim
 
 import numpy as np
+from numpy.linalg import norm
 from math import radians, degrees
 from math import pi as PI
 
@@ -137,7 +138,7 @@ class Leg:
         """
         self.moveFoot(self.foot_origin)
 
-    def getFootPositionAtPhase(self, phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
+    def getFootPositionAtPhase(self, phase, direction_vector = [1, 0], stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
         """
         DESCRIPTION:
         Calculates the position that the foot should be at given the current phase in the gait cycle and
@@ -145,9 +146,12 @@ class Leg:
 
         ARGUMENTS:
         + phase: The phase in the gait cycle.
+        + direction_vector: Array-like [x, y] specifying direction in which trajectory plane should be aligned with.
         RETURNS:
         + foot_pos: A size 3 list [x, y, z] of the coordinates of the calculated foot position.
         """
+        direction_vec = direction_vector/norm(direction_vector)
+
         if phase >= 2*PI:
             phase = phase - 2*PI
 
@@ -160,32 +164,32 @@ class Leg:
         if (phase >= 0 and phase < phi_1):
             # Stance phase (from-origin half)
             mapped_phase = ((PI/2)/phi_1)*phase
-            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)
-            foot_y = self.foot_origin[1]
+            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)*direction_vec[0]
+            foot_y = self.foot_origin[1] - stride_length*np.sin(mapped_phase)*direction_vec[1]
             foot_z = self.foot_origin[2]
             foot_pos = [foot_x, foot_y, foot_z]
         elif (phase >= phi_1 and phase < phi_2):
             # Swing phase
             mapped_phase = (PI/(phi_2 - phi_1))*(phase - phi_1) + PI/2
-            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)
-            foot_y = self.foot_origin[1]
+            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)*direction_vec[0]
+            foot_y = self.foot_origin[1] - stride_length*np.sin(mapped_phase)*direction_vec[1]
             foot_z = self.foot_origin[2] - swing_height*np.cos(mapped_phase)
             foot_pos = [foot_x, foot_y, foot_z]
         elif (phase >= phi_2 and phase < 2*PI):
             # Stance phase (towards-origin half)
             mapped_phase = ((PI/2)/2*PI - phi_2)*(phase - phi_2) + (3/2)*PI
-            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)
-            foot_y = self.foot_origin[1]
+            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)*direction_vec[0]
+            foot_y = self.foot_origin[1] - stride_length*np.sin(mapped_phase)*direction_vec[1]
             foot_z = self.foot_origin[2]
             foot_pos = [foot_x, foot_y, foot_z]
         return foot_pos
 
-    def moveToPhase(self, phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
+    def moveToPhase(self, phase, direction_vector = [1, 0], stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
         """
         DESCRIPTION:
         Moves the leg to the position in its trajectory as dictated by the phase.
         ARGUMENTS:
         + phase: The phase in the gait cycle.
         """
-        foot_pos = self.getFootPositionAtPhase(phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
+        foot_pos = self.getFootPositionAtPhase(phase, direction_vector = direction_vector, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
         self.moveFoot(foot_pos)
