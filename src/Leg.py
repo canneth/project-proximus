@@ -40,8 +40,8 @@ class Leg:
         self.d_x = self.d[0]
         self.d_y = self.d[1]
         _, self.l_1 = sim.simxGetObjectPosition(self.client_id, self.coxa_joint, self.femur_joint, sim.simx_opmode_blocking)
-        self.l_1_y = abs(self.l_1[2])
-        self.l_1_x = abs(self.l_1[1])
+        self.l_1_y = -self.l_1[2]
+        self.l_1_x = -self.l_1[1]
         _, self.l_2 = sim.simxGetObjectPosition(self.client_id, self.femur_joint, self.tibia_joint, sim.simx_opmode_blocking)
         self.l_2 = abs(self.l_2[0])
         _, self.l_3 = sim.simxGetObjectPosition(self.client_id, self.tibia_joint, self.foot, sim.simx_opmode_blocking)
@@ -73,6 +73,7 @@ class Leg:
         sim.simxSetJointTargetPosition(self.client_id, self.tibia_joint, angle, sim.simx_opmode_streaming)
 
     def ikFoot(self, dest):
+        # NOTE: For some reason, there seems to be significant in-precision in the IK results (up to about 7 degrees in joint angle errors), but the general position is thereabouts.
         """
         DESCRIPTION:
         Calculates the joint angles required to bring the foot to the dest vector, defined with respect to the body_frame.
@@ -99,8 +100,9 @@ class Leg:
 
         # Part 1: Finding theta_1
         l_a = ((p_y - d_y)**2 + p_z**2)**0.5
-        rho = np.arctan(abs(p_z)/abs(p_y - d_y))
-        beta = np.arccos(l_1_y/l_a)
+        # rho = np.arctan(abs(p_z)/abs(p_y - d_y)) # Causes float division by 0 when p_y = d_y
+        rho = np.arcsin(abs(p_z)/l_a)
+        beta = np.arccos(abs(l_1_y)/l_a)
         theta_1 = beta - rho
         # Part 2: Finding theta_2 and theta_3
         l_b = np.sqrt(l_a**2 - l_1_y**2)
@@ -128,88 +130,56 @@ class Leg:
         _ = sim.simxSetJointTargetPosition(self.client_id, self.femur_joint, theta_2, sim.simx_opmode_streaming)
         _ = sim.simxSetJointTargetPosition(self.client_id, self.tibia_joint, theta_3, sim.simx_opmode_streaming)
 
-    def gaitPhase(self, phase, stride_length = 0.12, swing_height = 0.08, swing_to_stance_speed_ratio = 2):
+    def moveToPhase(self, phase, stride_length = 0.12, swing_height = 0.08, swing_to_stance_ratio = 2):
         """
         DESCRIPTION:
         Moves the leg to the position in its trajectory as dictated by the phase.
         ARGUMENTS:
         + phase: The phase specifying the position in the leg's trajectory to send the foot to.
         """
+        if phase >= 2*PI:
+            phase = phase - 2*PI
+
         foot_pos = [0, 0, 0]
 
-        if ((phase <= PI/2 and phase >= 0) or (phase >= (3/2)*PI and phase <= 2*PI)):
-            # Stance phase
-            foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
+        # Transition points:
+        phi_1 = PI/(swing_to_stance_ratio + 1)
+        phi_2 = ((2*swing_to_stance_ratio + 1)/(swing_to_stance_ratio + 1))*PI
+
+        if (phase >= 0 and phase < phi_1):
+            # Stance phase (from-origin half)
+            mapped_phase = ((PI/2)/phi_1)*phase
+            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)
             foot_y = self.foot_origin[1]
             foot_z = self.foot_origin[2]
             foot_pos = [foot_x, foot_y, foot_z]
-            # Slower during stance phase
-            # TODO: Slow down phase
-        else:
+        elif (phase >= phi_1 and phase < phi_2):
             # Swing phase
-            foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
+            mapped_phase = (PI/(phi_2 - phi_1))*(phase - phi_1) + PI/2
+            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)
             foot_y = self.foot_origin[1]
-            foot_z = self.foot_origin[2] - swing_height*np.cos(phase)
+            foot_z = self.foot_origin[2] - swing_height*np.cos(mapped_phase)
             foot_pos = [foot_x, foot_y, foot_z]
-            # Faster during swing phase
-            # TODO: Speed up phase
+        elif (phase >= phi_2 and phase < 2*PI):
+            # Stance phase (towards-origin half)
+            mapped_phase = ((PI/2)/2*PI - phi_2)*(phase - phi_2) + (3/2)*PI
+            foot_x = self.foot_origin[0] - stride_length*np.sin(mapped_phase)
+            foot_y = self.foot_origin[1]
+            foot_z = self.foot_origin[2]
+            foot_pos = [foot_x, foot_y, foot_z]
+
+        # if ((phase >= 0 and phase <= phi_1) or (phase >= phi_2 and phase <= 2*PI)):
+        #     # Stance phase
+        #     foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
+        #     foot_y = self.foot_origin[1]
+        #     foot_z = self.foot_origin[2]
+        #     foot_pos = [foot_x, foot_y, foot_z]
+        # else:
+        #     # Swing phase
+        #     foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
+        #     foot_y = self.foot_origin[1]
+        #     foot_z = self.foot_origin[2] - swing_height*np.cos(phase)
+        #     foot_pos = [foot_x, foot_y, foot_z]
         
         self.moveFoot(foot_pos)
 
-
-
-if __name__ == "__main__":
-    
-    ### BEGIN SIM CONNECTION ###
-    connection_successful = False
-    print("=== Programme START ===")
-    sim.simxFinish(-1) # just in case, close all opened connections
-    client_id = sim.simxStart("127.0.0.1",19999,True,True,5000,5) # Connect to CoppeliaSim
-    # Connection ID of 19997 connects to the simulator without having the simulation running
-    if client_id!=-1:
-        print ("Connected to remote API server")
-        connection_successful = True
-    else:
-        print ("Failed connecting to remote API server")
-        connection_successful = False
-
-    if connection_successful:
-        ### GET OBJECT HANDLES ###
-        _, body_frame = sim.simxGetObjectHandle(client_id, "body_frame", sim.simx_opmode_blocking)
-        # Front left leg
-        _, front_left_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_front_left", sim.simx_opmode_blocking)
-        _, front_left_coxa = sim.simxGetObjectHandle(client_id, "shoulder_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_femur_joint = sim.simxGetObjectHandle(client_id, "femur_front_left", sim.simx_opmode_blocking)
-        _, front_left_femur = sim.simxGetObjectHandle(client_id, "femur_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_front_left", sim.simx_opmode_blocking)
-        _, front_left_tibia = sim.simxGetObjectHandle(client_id, "tibia_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_foot = sim.simxGetObjectHandle(client_id, "foot_front_left", sim.simx_opmode_blocking)
-
-        ### SETUP ###
-        leg = Leg(
-            client_id,
-            body_frame,
-            front_left_coxa_joint,
-            front_left_coxa,
-            front_left_femur_joint,
-            front_left_femur,
-            front_left_tibia_joint,
-            front_left_tibia,
-            front_left_foot,
-            foot_origin = [0.2, 0.1, -0.225]
-        )
-
-        print("Setup done, entering while loop...")
-    
-        # leg.moveFoot([0.19302406907081604, 0.11094817519187927, -0.22628307342529297]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-        leg.moveFoot([0.14550861716270447, 0.046028509736061096, -0.1908787190914154]) # Corresponds to joint angles (in degrees) [-20, -20, -20]
-        time.sleep(0.5)
-        _, foot_pos = sim.simxGetObjectPosition(client_id, leg.foot, leg.body_frame, sim.simx_opmode_blocking)
-        print("foot_pos: {0}".format(foot_pos))
-
-        # TODO: For some reason there seems to be a massive loss of precision in the IK (a consistent error of up to 7 degress in the IK results)
-
-        ### CLOSE CONNECTION TO SIM ###
-        sim.simxGetPingTime(client_id)
-        sim.simxFinish(client_id)
-    print("=== Programme end ===")
