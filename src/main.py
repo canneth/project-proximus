@@ -25,99 +25,11 @@ if __name__ == "__main__":
     if connection_successful:
         ### GET OBJECT HANDLES ###
         _, world_frame = sim.simxGetObjectHandle(client_id, "world_frame", sim.simx_opmode_blocking)
-        _, body_frame = sim.simxGetObjectHandle(client_id, "body_frame", sim.simx_opmode_blocking)
-        _, body = sim.simxGetObjectHandle(client_id, "base_link_respondable", sim.simx_opmode_blocking)
-        # Front left leg
-        _, front_left_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_front_left", sim.simx_opmode_blocking)
-        _, front_left_coxa = sim.simxGetObjectHandle(client_id, "shoulder_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_femur_joint = sim.simxGetObjectHandle(client_id, "femur_front_left", sim.simx_opmode_blocking)
-        _, front_left_femur = sim.simxGetObjectHandle(client_id, "femur_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_front_left", sim.simx_opmode_blocking)
-        _, front_left_tibia = sim.simxGetObjectHandle(client_id, "tibia_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_foot = sim.simxGetObjectHandle(client_id, "foot_front_left", sim.simx_opmode_blocking)
-        # Front right leg
-        _, front_right_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_front_right", sim.simx_opmode_blocking)
-        _, front_right_coxa = sim.simxGetObjectHandle(client_id, "shoulder_front_right_respondable", sim.simx_opmode_blocking)
-        _, front_right_femur_joint = sim.simxGetObjectHandle(client_id, "femur_front_right", sim.simx_opmode_blocking)
-        _, front_right_femur = sim.simxGetObjectHandle(client_id, "femur_front_right_respondable", sim.simx_opmode_blocking)
-        _, front_right_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_front_right", sim.simx_opmode_blocking)
-        _, front_right_tibia = sim.simxGetObjectHandle(client_id, "tibia_front_right_respondable", sim.simx_opmode_blocking)
-        _, front_right_foot = sim.simxGetObjectHandle(client_id, "foot_front_right", sim.simx_opmode_blocking)
-        # Back left leg
-        _, back_left_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_rear_left", sim.simx_opmode_blocking)
-        _, back_left_coxa = sim.simxGetObjectHandle(client_id, "shoulder_rear_left_respondable", sim.simx_opmode_blocking)
-        _, back_left_femur_joint = sim.simxGetObjectHandle(client_id, "femur_rear_left", sim.simx_opmode_blocking)
-        _, back_left_femur = sim.simxGetObjectHandle(client_id, "femur_rear_left_respondable", sim.simx_opmode_blocking)
-        _, back_left_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_rear_left", sim.simx_opmode_blocking)
-        _, back_left_tibia = sim.simxGetObjectHandle(client_id, "tibia_rear_left_respondable", sim.simx_opmode_blocking)
-        _, back_left_foot = sim.simxGetObjectHandle(client_id, "foot_rear_left", sim.simx_opmode_blocking)
-        # Back right leg
-        _, back_right_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_rear_right", sim.simx_opmode_blocking)
-        _, back_right_coxa = sim.simxGetObjectHandle(client_id, "shoulder_rear_right_respondable", sim.simx_opmode_blocking)
-        _, back_right_femur_joint = sim.simxGetObjectHandle(client_id, "femur_rear_right", sim.simx_opmode_blocking)
-        _, back_right_femur = sim.simxGetObjectHandle(client_id, "femur_rear_right_respondable", sim.simx_opmode_blocking)
-        _, back_right_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_rear_right", sim.simx_opmode_blocking)
-        _, back_right_tibia = sim.simxGetObjectHandle(client_id, "tibia_rear_right_respondable", sim.simx_opmode_blocking)
-        _, back_right_foot = sim.simxGetObjectHandle(client_id, "foot_rear_right", sim.simx_opmode_blocking)
 
-        ### SETUP ###
-        # Legs
-        front_left_leg = Leg(
-            client_id,
-            body_frame,
-            front_left_coxa_joint,
-            front_left_coxa,
-            front_left_femur_joint,
-            front_left_femur,
-            front_left_tibia_joint,
-            front_left_tibia,
-            front_left_foot
-        )
-        front_right_leg = Leg(
-            client_id,
-            body_frame,
-            front_right_coxa_joint,
-            front_right_coxa,
-            front_right_femur_joint,
-            front_right_femur,
-            front_right_tibia_joint,
-            front_right_tibia,
-            front_right_foot
-        )
-        back_left_leg = Leg(
-            client_id,
-            body_frame,
-            back_left_coxa_joint,
-            back_left_coxa,
-            back_left_femur_joint,
-            back_left_femur,
-            back_left_tibia_joint,
-            back_left_tibia,
-            back_left_foot
-        )
-        back_right_leg = Leg(
-            client_id,
-            body_frame,
-            back_right_coxa_joint,
-            back_right_coxa,
-            back_right_femur_joint,
-            back_right_femur,
-            back_right_tibia_joint,
-            back_right_tibia,
-            back_right_foot
-        )
         # Robot
         robot = Collywobble(
             client_id,
-            world_frame,
-            body_frame,
-            body,
-            front_left_leg,
-            front_right_leg,
-            back_left_leg,
-            back_right_leg,
-            stance_polygon_width = 0.1,
-            swing_to_stance_ratio = 0.5
+            stance_polygon_width = 0.1
         )
 
         print("Setup done, entering while loop...")
@@ -136,16 +48,19 @@ if __name__ == "__main__":
         # _, foot_pos = sim.simxGetObjectPosition(client_id, back_left_foot, body_frame, sim.simx_opmode_blocking)
         # print("Current position: {}".format(foot_pos))
 
-        phase = 0
-        base_phase_step = 0.03
 
-        robot.stride_length = 0
+        ### MOVE ROBOT TO FEET ORIGINS FIRST ###
+        robot.moveFeetToOrigins()
+        time.sleep(2) # Wait for simulation to settle
+
+        phase = 0
+        base_phase_step = 0.02
 
         ### LOOP ###
         while True:
             if phase >= 2*PI:
                 phase = phase - 2*PI
-            robot.moveToPhaseInTrotGait(phase)
+            robot.moveToPhaseInTrotGaitStabilised(phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2)
             phase = phase + base_phase_step
             pass
 

@@ -95,8 +95,8 @@ class Leg:
         p_z = dest[2]
         p_yz = np.sqrt(p_y**2 + p_z**2)
 
-        print("p_x: {:.5f} | p_y: {:.5f} | p_z: {:.5f}".format(p_x, p_y, p_z))
-        print("d_x: {:.5f} | d_y: {:.5f} | l_1_x: {:.5f} | l_1_y: {:.5f} | l_2: {:.5f} | l_3: {:.5f}".format(self.d_x, self.d_y, self.l_1_x, self.l_1_y, self.l_2, self.l_3))
+        # print("p_x: {:.5f} | p_y: {:.5f} | p_z: {:.5f}".format(p_x, p_y, p_z))
+        # print("d_x: {:.5f} | d_y: {:.5f} | l_1_x: {:.5f} | l_1_y: {:.5f} | l_2: {:.5f} | l_3: {:.5f}".format(self.d_x, self.d_y, self.l_1_x, self.l_1_y, self.l_2, self.l_3))
 
         # Part 1: Finding theta_1
         l_a = ((p_y - d_y)**2 + p_z**2)**0.5
@@ -111,7 +111,7 @@ class Leg:
         gamma = np.arccos((l_3**2 - l_eff**2 - l_2**2)/(-2*l_eff*l_2))
         theta_2 = -(np.arctan2(p_x - d_x - l_1_x, l_b) - gamma + PI/2)
 
-        print("theta_1: {:.5f} rad {:.2f} deg | theta_2: {:.5f} rad {:.2f} deg | theta_3: {:.5f} rad {:.2f} deg".format(theta_1, degrees(theta_1), theta_2, degrees(theta_2), theta_3, degrees(theta_3)))
+        # print("theta_1: {:.5f} rad {:.2f} deg | theta_2: {:.5f} rad {:.2f} deg | theta_3: {:.5f} rad {:.2f} deg".format(theta_1, degrees(theta_1), theta_2, degrees(theta_2), theta_3, degrees(theta_3)))
 
         return theta_1, theta_2, theta_3
 
@@ -130,12 +130,23 @@ class Leg:
         _ = sim.simxSetJointTargetPosition(self.client_id, self.femur_joint, theta_2, sim.simx_opmode_streaming)
         _ = sim.simxSetJointTargetPosition(self.client_id, self.tibia_joint, theta_3, sim.simx_opmode_streaming)
 
-    def moveToPhase(self, phase, stride_length = 0.12, swing_height = 0.08, swing_to_stance_ratio = 2):
+    def moveFootToOrigin(self):
         """
         DESCRIPTION:
-        Moves the leg to the position in its trajectory as dictated by the phase.
+        Moves foot to its trajectory origin.
+        """
+        self.moveFoot(self.foot_origin)
+
+    def getFootPositionAtPhase(self, phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
+        """
+        DESCRIPTION:
+        Calculates the position that the foot should be at given the current phase in the gait cycle and
+        returns this calculated position.
+
         ARGUMENTS:
-        + phase: The phase specifying the position in the leg's trajectory to send the foot to.
+        + phase: The phase in the gait cycle.
+        RETURNS:
+        + foot_pos: A size 3 list [x, y, z] of the coordinates of the calculated foot position.
         """
         if phase >= 2*PI:
             phase = phase - 2*PI
@@ -167,19 +178,14 @@ class Leg:
             foot_y = self.foot_origin[1]
             foot_z = self.foot_origin[2]
             foot_pos = [foot_x, foot_y, foot_z]
+        return foot_pos
 
-        # if ((phase >= 0 and phase <= phi_1) or (phase >= phi_2 and phase <= 2*PI)):
-        #     # Stance phase
-        #     foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
-        #     foot_y = self.foot_origin[1]
-        #     foot_z = self.foot_origin[2]
-        #     foot_pos = [foot_x, foot_y, foot_z]
-        # else:
-        #     # Swing phase
-        #     foot_x = self.foot_origin[0] - stride_length*np.sin(phase)
-        #     foot_y = self.foot_origin[1]
-        #     foot_z = self.foot_origin[2] - swing_height*np.cos(phase)
-        #     foot_pos = [foot_x, foot_y, foot_z]
-        
+    def moveToPhase(self, phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2):
+        """
+        DESCRIPTION:
+        Moves the leg to the position in its trajectory as dictated by the phase.
+        ARGUMENTS:
+        + phase: The phase in the gait cycle.
+        """
+        foot_pos = self.getFootPositionAtPhase(phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
         self.moveFoot(foot_pos)
-
