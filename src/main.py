@@ -29,7 +29,7 @@ if __name__ == "__main__":
         # Robot
         robot = Collywobble(
             client_id,
-            stance_polygon_width = 0.1
+            stance_polygon_width = 0.15
         )
 
         print("Setup done, entering while loop...")
@@ -48,19 +48,18 @@ if __name__ == "__main__":
         # _, foot_pos = sim.simxGetObjectPosition(client_id, back_left_foot, body_frame, sim.simx_opmode_blocking)
         # print("Current position: {}".format(foot_pos))
 
-
         ### MOVE ROBOT TO FEET ORIGINS FIRST ###
         robot.moveFeetToOrigins()
         time.sleep(2) # Wait for simulation to settle
 
         phase = 0
-        base_phase_step = 0.02
+        base_phase_step = 0.005
 
         ### LOOP ###
         while True:
             if phase >= 2*PI:
                 phase = phase - 2*PI
-            robot.moveToPhaseInTrotGaitStabilised(phase, stride_length = 0, swing_height = 0.08, swing_to_stance_ratio = 0.2)
+            robot.moveToPhaseInTrotGaitStabilised(phase, stride_length = 0.05, swing_height = 0.1, swing_to_stance_ratio = 1)
             phase = phase + base_phase_step
             pass
 

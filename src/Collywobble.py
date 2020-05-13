@@ -7,7 +7,7 @@ from Leg import Leg
 from Accelerometer import Accelerometer
 from Gyrosensor import Gyrosensor
 
-from simple_pid import PID
+# from simple_pid import PID
 
 class Collywobble:
     def __init__(
@@ -106,16 +106,6 @@ class Collywobble:
         self.accelerometer = Accelerometer(client_id)
         self.gyro = Gyrosensor(client_id)
 
-        # PID controllers
-        self.x_accel_pid = PID(0.005, 0.05, 0, setpoint = 0)
-        self.y_accel_pid = PID(0.005, 0.05, 0, setpoint = 0)
-        self.x_accel_pid.output_limits = (-0.1, 0.1)
-        self.y_accel_pid.output_limits = (-0.1, 0.1)
-        self.x_gyro_pid = PID(0.005, 0.05, 0, setpoint = 0) # TODO: Tune this! (P too strong)
-        self.y_gyro_pid = PID(0.005, 0.05, 0, setpoint = 0) # TODO: Tune this! (P too strong)
-        self.x_gyro_pid.output_limits = (-0.1, 0.1)
-        self.y_gyro_pid.output_limits = (-0.1, 0.1)
-
         self.client_id = client_id
 
         self.stance_polygon_length = stance_polygon_length
@@ -155,83 +145,84 @@ class Collywobble:
         ARGUMENTS:
         + phase: The phase in the gait cycle.
         """
+        # Raw gait foot positions
         front_left_foot_neutral_pos = self.front_left_leg.getFootPositionAtPhase(phase = phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        front_left_foot_pos = self.translationStabilityController(front_left_foot_neutral_pos) # Apply translation stability controller
-        front_left_foot_pos = self.rotationStabilityController(front_left_foot_pos) # Apply rotation stability controller
-
         front_right_foot_neutral_pos = self.front_right_leg.getFootPositionAtPhase(phase = phase + PI, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        front_right_foot_pos = self.translationStabilityController(front_right_foot_neutral_pos) # Apply translation stability controller
-        front_right_foot_pos = self.rotationStabilityController(front_right_foot_pos) # Apply rotation stability controller
-
         back_left_foot_neutral_pos = self.back_left_leg.getFootPositionAtPhase(phase = phase + PI, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        back_left_foot_pos = self.translationStabilityController(back_left_foot_neutral_pos) # Apply translation stability controller
-        back_left_foot_pos = self.rotationStabilityController(back_left_foot_pos) # Apply rotation stability controller
-
         back_right_foot_neutral_pos = self.back_right_leg.getFootPositionAtPhase(phase = phase, stride_length = stride_length, swing_height = swing_height, swing_to_stance_ratio = swing_to_stance_ratio)
-        back_right_foot_pos = self.translationStabilityController(back_right_foot_neutral_pos) # Apply translation stability controller
-        back_right_foot_pos = self.rotationStabilityController(back_right_foot_pos) # Apply rotation stability controller
+        
+        # Apply controller offsets
+        front_left_foot_pos, front_right_foot_pos, back_left_foot_pos, back_right_foot_pos = \
+            self.rpyController(
+                front_left_foot_neutral_pos,
+                front_right_foot_neutral_pos,
+                back_left_foot_neutral_pos,
+                back_right_foot_neutral_pos
+            )
 
         self.front_left_leg.moveFoot(front_left_foot_pos)
         self.front_right_leg.moveFoot(front_right_foot_pos)
         self.back_left_leg.moveFoot(back_left_foot_pos)
         self.back_right_leg.moveFoot(back_right_foot_pos)
 
-    # Create a controller that shifts the coordinates of each foot in real-time...
-    # 2 sensors will contribute to these augmentations
-    # Accelerometer: As acceleration increases in one direction, foot coordinates will move in the opposite direction
-    # Gyroscope: As rate of rotation increases in one direction, foot coordinates will move to oppose that motion
-
-    # TODO: Grab accelerometer data and learn how to clean it
-
-    def translationStabilityController(self, neutral_foot_pos):
+    def rpyController(
+        self,
+        front_left_foot_pos_before,
+        front_right_foot_pos_before,
+        back_left_foot_pos_before,
+        back_right_foot_pos_before
+    ):
         """
         DESCRIPTION:
-        Takes in the neutral_foot_pos that the foot is supposed to be in undisturbed, and applies an offset based on
-        linear acceleration disturbances on the robot. The resulting foot_pos is returned.
+        Applies an offset on the feet target positions based on linear acceleration disturbances on the robot.
+        The resulting foot_pos's are returned.
         
         ARGUMENTS:
-        + neutral_foot_pos: The undisturbed position of the foot.
+        + front_left_foot_pos_before: A size 3 list [x, y, z]; the foot coordinates, to be augmented.
+        + front_right_foot_pos_before: A size 3 list [x, y, z]; the foot coordinates, to be augmented.
+        + back_left_foot_pos_before: A size 3 list [x, y, z]; the foot coordinates, to be augmented.
+        + back_right_foot_pos_before: A size 3 list [x, y, z]; the foot coordinates, to be augmented.
         RETURNS:
-        + foot_pos: A size 3 list [x, y, z]; the augmented foot_pos coordinates to counter-act the linear acceleration disturbances.
+        + front_left_foot_pos: A size 3 list [x, y, z]; the augmented foot_pos coordinates.
+        + front_right_foot_pos: A size 3 list [x, y, z]; the augmented foot_pos coordinates.
+        + back_left_foot_pos: A size 3 list [x, y, z]; the augmented foot_pos coordinates.
+        + back_right_foot_pos: A size 3 list [x, y, z]; the augmented foot_pos coordinates.
         """
-        foot_pos = neutral_foot_pos.copy()
-        # Control in x-direction
+        # Accelerometer data is opposite of acceleration of body: -ve data means body is accelerating in the +ve direction.
+        # Hence, when accel reads +ve, it means body is accelerating in the -ve direction.
+
         accel_x = self.accelerometer.getX()
-        x_control_value = self.x_accel_pid(accel_x)
-        foot_pos[0] = neutral_foot_pos[0] + x_control_value
-        # Control in y-direction
         accel_y = self.accelerometer.getY()
-        y_control_value = self.y_accel_pid(accel_y)
-        foot_pos[1] = neutral_foot_pos[1] + y_control_value
+        pitch_control_value = 0*accel_x
+        roll_control_value = 0.005*accel_y
+
+        front_left_foot_pos = front_left_foot_pos_before.copy()
+        front_right_foot_pos = front_right_foot_pos_before.copy()
+        back_left_foot_pos = back_left_foot_pos_before.copy()
+        back_right_foot_pos = back_right_foot_pos_before.copy()
+
+
+        ### ROLL CONTROL ###
+        # When accel_y is +ve, the robot is rolling towards the left; -ve, rolling towards the right.
+        # Hence, when accel_y is +ve, left legs should extend, right legs flex.
+        # Note that extension of legs is in the -ve z-direction.
+        front_left_foot_pos[2] = front_left_foot_pos[2] - roll_control_value
+        front_right_foot_pos[2] = front_right_foot_pos[2] + roll_control_value
+        back_left_foot_pos[2] = back_left_foot_pos[2] - roll_control_value
+        back_right_foot_pos[2] = back_right_foot_pos[2] + roll_control_value
+
+        ### PITCH CONTROL ###
+        # When accel_x is +ve, the robot is pitching forwards; -ve, pitching backwards.
+        # Hence, when accel_x is +ve, front legs should extend, back legs flex.
+        # Note that extension of legs is in the -ve z-direction.
+        front_left_foot_pos[2] = front_left_foot_pos[2] - pitch_control_value
+        front_right_foot_pos[2] = front_right_foot_pos[2] - pitch_control_value
+        back_left_foot_pos[2] = back_left_foot_pos[2] + pitch_control_value
+        back_right_foot_pos[2] = back_right_foot_pos[2] + pitch_control_value
         
         # print("accel_x: {} | x_control_value: {} | accel_y: {} | y_control_value: {}".format(accel_x, x_control_value, accel_y, y_control_value))
 
-        return foot_pos
-
-    def rotationStabilityController(self, neutral_foot_pos):
-        """
-        DESCRIPTION:
-        Takes in the neutral_foot_pos that the foot is supposed to be in undisturbed, and applies an offset based on
-        rotational disturbances on the robot. The resulting foot_pos is returned.
-        
-        ARGUMENTS:
-        + neutral_foot_pos: The undisturbed position of the foot.
-        RETURNS:
-        + foot_pos: A size 3 list [x, y, z]; the augmented foot_pos coordinates to counter-act the rotational disturbances.
-        """
-        foot_pos = neutral_foot_pos.copy()
-        # Control in x-direction
-        gyro_y_accel = self.gyro.getYAccel()
-        x_control_value = self.x_gyro_pid(gyro_y_accel) # When robot pitches forwards, we want the feet to move further forwards (in the +x direction)
-        foot_pos[0] = neutral_foot_pos[0] + x_control_value
-        # Control in y-direction
-        gyro_x_accel = self.gyro.getXAccel()
-        y_control_value = self.y_gyro_pid(gyro_x_accel) # When robot rolls to the right, we want the feet to move further right-wards (in the -y direction)
-        foot_pos[1] = neutral_foot_pos[1] - y_control_value
-        
-        print("gyro_y_accel: {} | x_control_value: {} | gyro_x_accel: {} | y_control_value: {}".format(gyro_y_accel, x_control_value, gyro_x_accel, y_control_value))
-
-        return foot_pos
+        return front_left_foot_pos, front_right_foot_pos, back_left_foot_pos, back_right_foot_pos
 
     def moveFeetToOrigins(self):
         """
