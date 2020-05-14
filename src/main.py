@@ -30,7 +30,7 @@ if __name__ == "__main__":
         # Robot
         robot = Collywobble(
             client_id,
-            stance_polygon_width = 0.2
+            stance_polygon_width = 0.18
         )
 
         print("Setup done, entering while loop...")
@@ -66,10 +66,9 @@ if __name__ == "__main__":
                 phase = phase - 2*PI
             if direction_phase >= 2*PI:
                 direction_phase = direction_phase - 2*PI
-            robot.moveToPhaseInTrotTranslate(phase, direction_vector = [0, 1], stride_length = 0.08, swing_height = 0.1, swing_to_stance_ratio = 0.5)
+            robot.moveToPhaseInTrotTranslate(phase, direction_vector = [0, 1], stride_length = 0.1, swing_height = 0.16, swing_to_stance_ratio = 0.4)
             phase = phase + base_phase_step
             direction_phase = direction_phase + direction_phase_step
-            pass
 
         ### CLOSE CONNECTION TO SIM ###
         sim.simxGetPingTime(client_id)
