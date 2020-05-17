@@ -1,0 +1,56 @@
+
+######
+
+Available on AliExpress:
++ Model: DS3235-270degrees
++ Size: 40x20x38.5 mm
++ Torque: 29kgcm @ 5V ; 32kgcm @ 6V ; 35kgcm @ 7.4V
++ Mass: 60g
++ Link:
+https://www.aliexpress.com/item/32702835900.html?spm=a2g0o.detail.1000060.2.401267a48fGR25&gps-id=pcDetailBottomMoreThisSeller&scm=1007.14977.165002.0&scm_id=1007.14977.165002.0&scm-url=1007.14977.165002.0&pvid=69696092-1c6e-4c8b-a04a-dc1d89d424db&_t=gps-id:pcDetailBottomMoreThisSeller,scm-url:1007.14977.165002.0,pvid:69696092-1c6e-4c8b-a04a-dc1d89d424db,tpp_buckets:668%230%23131923%239_668%23808%237756%23233_668%23888%233325%235_668%232846%238116%23995_668%232717%237562%23443
+
+
+Stanford Pupper:
+https://github.com/stanfordroboticsclub/StanfordQuadruped
+
+######
+
+Martin Triendl's version:
+
+Servos used: 	JX CLS6336HV (discountinued) - 35kg servo
+Power source: 	four 18650 batteries in 2s2p; works for 30-60min depending on the speed.
+Total mass: 	About 1800g
+Processor: 	3.6 but any Teensy should work
+Cost:		About 700€ in Germany (including controller and charger).
+
+
+Key points from comments:
++ Fixed gait trajectories, independent correction for each leg.
++ Tried BNO055 IMU but it drifts and is too slow for dynamic balance.
++ Robot uses an IMU.
++ MG996R is too heavy for its torque; power density (per mass) is important.
++ Current 35kg servos are stressed under own mass of about 1.9kg, servos get hot.
++ Control arms made by pressing 5mm bearings into 3D-printed linkages.
+
+Raw comments:
+"""
+Its a fixed trotting gate where the timing for stances and step is always same atm. The trajectory for each leg using same equations but is calculated independently and corrected in any process cycle due to  IMU and Bluetooth input.
+There are two balancing routines, one for stance and one for step phase. Its controlled by the IMU. 
+I tryed the BNO055 as well, but it has a drift and its to slow for balancing.
+"""
+"""
+It all custom code. The IMU works with a gyroscope and an acceleration sensor combined by complementary filters.
+"""
+"""
+Thanks! The power density is most important! The MG996R is to heavy for the torque it can produce... or you make the robot much smaller (so the lever arm is shorter) but then it will be slow!
+And maybe look for teensy instead of Arduino...
+"""
+"""
+Yeah it's still same servos but im close to the power limit with the new body (its almost 2kg and servos getting hot now). I'm not sure atm and it still needs some changes in design...
+"""
+"""
+All parts together was about 700€ in Germany (including controller and charger).
+"""
+"""
+On V3 i pressed a 5mm bearing into the 3d-printed linkage and screwed the bearing directly on the servo horn. On V4 im using ball joints...
+"""

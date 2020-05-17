@@ -1,0 +1,32 @@
+
+### TowerPro MG995 ###
+
+Specifications:
+
+Weight: ............................ 55g
+Dimension: ......................... 40.7×19.7×42.9mm
+Stall torque: ...................... 9.4kg/cm (4.8v); 11kg/cm (6v)
+Operating speed: ................... 0.20sec/60degree (4.8v); 0.16sec/60degree (6.0v)
+Operating voltage: ................. 4.8~ 6.6v
+Gear Type: ......................... Metal gear
+Temperature range: ................. 0- 55deg
+Dead band width: ................... 1us
+servo wire length: ................. 32cm
+Current draw at idle: .............. 10MA
+No load operating current draw: .... 170MA
+Stall current draw : ............... 1200MA
+Servo Plug: ........................ JR (Fits JR and Futaba)
+
+Dimensions:
+
+http://torqpro.com/wp-content/uploads/2014/07/%E5%B0%8F%E9%A6%AC%E9%81%94%E5%B0%BA%E5%AF%B8%E6%A8%99%E7%A4%BA%E5%9C%96B.jpg
+
+Weight(g)		55
+Torque(kg)(4.8v)	8.5
+Speed(sec/60deg)	0.2
+A(mm)	 		42.7
+B(mm)	 		40.9
+C(mm)	 		37
+D(mm)	 		20
+E(mm)	 		54
+F(mm)	 		26.8
