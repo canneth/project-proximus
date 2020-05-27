@@ -63,7 +63,6 @@ if __name__ == "__main__":
 
 
         command = Command()
-        command.body_pitch = np.deg2rad(-8)
         command.stance_height = 0.2
         master_controller.stepOnce(robot, command)
         time.sleep(1) # Wait for simulation to settle
@@ -80,6 +79,8 @@ if __name__ == "__main__":
 
             last_time = time.time()
             command.mode = Mode.TROT
+            command.body_roll = np.deg2rad(10)
+            command.body_velocity = [0.2, 0, 0]
             master_controller.stepOnce(robot, command)
 
         ### CLOSE CONNECTION TO SIM ###

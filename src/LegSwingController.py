@@ -27,16 +27,18 @@ class LegSwingController:
         + touchdown_location: A (3,) array; the x, y, z coordinates of the touchdown location wrt body.
         """
         touchdown_displacement_from_neutral_location = (
-            self.alpha
-            * command.body_velocity
-            * self.gait_config.stance_duration_in_ticks
-            * self.gait_config.config.dt
+            np.dot(
+                self.alpha
+                * self.gait_config.leg_stance_duration_in_ticks
+                * self.gait_config.config.dt,
+                command.body_velocity
+            )
         )
         touchdown_displacement_from_neutral_location[2] = 0 # z-coordinate not important for touchdown location
         projected_total_gait_yaw_during_stance_phase = (
             self.beta
             * command.gait_yaw_speed
-            * self.gait_config.stance_duration_in_ticks
+            * self.gait_config.leg_stance_duration_in_ticks
             * self.gait_config.config.dt
         )
         projected_total_gait_yaw_rotation_matrix = euler2mat(0, 0, projected_total_gait_yaw_during_stance_phase)
@@ -63,7 +65,7 @@ class LegSwingController:
         assert swing_proportion_completed >= 0 and swing_proportion_completed <= 1
         current_foot_location_assuming_no_body_rpy = robot.foot_locations_wrt_body_assuming_no_body_rpy[:, leg_index]
         touchdown_location = self.calculateRaibertTouchdownLocation(robot, command, leg_index)
-        time_to_touchdown = self.gait_config.config.dt * self.gait_config.swing_duration_in_ticks * (1.0 - swing_proportion_completed)
+        time_to_touchdown = self.gait_config.config.dt * self.gait_config.leg_swing_duration_in_ticks * (1.0 - swing_proportion_completed)
         foot_delta_p = (touchdown_location - current_foot_location_assuming_no_body_rpy)/(time_to_touchdown / self.gait_config.config.dt)
         foot_delta_p[2] = 0
         z_from_ground = self.gait_config.swing_height*np.sin(swing_proportion_completed*PI)

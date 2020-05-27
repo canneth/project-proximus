@@ -41,7 +41,7 @@ class MasterController:
                 # Calculate position of leg's foot at the next tick
                 swing_proportion_completed = (
                     gait_controller.calculate_ticks_into_current_phase(robot.ticks)
-                    / gait_controller.gait_config.swing_duration_in_ticks
+                    / gait_controller.gait_config.gait_swing_duration_in_ticks
                 )
                 new_foot_locations_wrt_body[:, leg_index] = (
                     leg_swing_controller.calculateNewFootLocation(robot, command, leg_index, swing_proportion_completed)
@@ -72,7 +72,12 @@ class MasterController:
         robot.body_roll = command.body_roll
         robot.body_pitch = command.body_pitch
         robot.body_yaw = command.body_yaw
-        print("FL FOOT:: Phase: {} | xyz: {}".format(contact_pattern[0], robot.foot_locations_wrt_body[:, 0]))
+        print("FL FOOT:: Phase: {} | xyz: {} | Touchdown location: {}".format(
+                contact_pattern[0],
+                robot.foot_locations_wrt_body[:, 0],
+                leg_swing_controller.calculateRaibertTouchdownLocation(robot, command, 0)
+            )
+        )
         
     def stepOnce(self, robot, command = None):
         """

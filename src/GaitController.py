@@ -23,10 +23,10 @@ class GaitController:
         RETURNS:
         + gait_phase_index: An integer; The phase index of the current phase of the gait.
         """
-        ticks_into_current_gait_cycle = ticks % self.gait_config.cycle_duration_in_ticks
+        ticks_into_current_gait_cycle = ticks % self.gait_config.gait_cycle_duration_in_ticks
         tick_sum = 0
-        for gait_phase_index in range(self.gait_config.number_of_phases):
-            tick_sum += self.gait_config.phase_durations_in_ticks[gait_phase_index]
+        for gait_phase_index in range(self.gait_config.gait_number_of_phases):
+            tick_sum += self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
             if ticks_into_current_gait_cycle < tick_sum:
                 return gait_phase_index
 
@@ -41,12 +41,12 @@ class GaitController:
         RETURNS:
         + ticks_into_current_phase: The elapsed time, in ticks, from the start of the current phase of the gait.
         """
-        ticks_into_current_gait_cycle = ticks % self.gait_config.cycle_duration_in_ticks
+        ticks_into_current_gait_cycle = ticks % self.gait_config.gait_cycle_duration_in_ticks
         tick_sum = 0
-        for gait_phase_index in range(self.gait_config.number_of_phases):
-            tick_sum += self.gait_config.phase_durations_in_ticks[gait_phase_index]
+        for gait_phase_index in range(self.gait_config.gait_number_of_phases):
+            tick_sum += self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
             if ticks_into_current_gait_cycle < tick_sum:
-                ticks_into_current_phase = ticks_into_current_gait_cycle - tick_sum + self.gait_config.phase_durations_in_ticks[gait_phase_index]
+                ticks_into_current_phase = ticks_into_current_gait_cycle - tick_sum + self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
                 return ticks_into_current_phase
 
     def calculate_contact_pattern(self, ticks):

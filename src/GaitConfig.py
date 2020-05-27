@@ -19,6 +19,8 @@ class GaitConfig:
 
         if (self.gait == Gait.TROT):
             ### TROT PARAMS ###
+            self._gait_stance_duration = 0.1 # In seconds; Trot stance is when all 4 feet are in stance
+            self._gait_swing_duration = 0.3 # In seconds; Trot swing is when 2 feet are in swing, 2 feet are in stance
             self.contact_schedule = (
                 np.array(
                     [[1, 1, 1, 0],
@@ -27,13 +29,12 @@ class GaitConfig:
                     [1, 1, 1, 0]]
                 )
             ) # 0 = swing, 1 = stance
-            self.number_of_phases = self.contact_schedule.shape[1]
-            self.stance_duration = 1 # In seconds; Trot stance is when all 4 feet are in stance
-            self.swing_duration = 1 # In seconds; Trot swing is when 2 feet are in swing, 2 feet are in stance
-            self.phase_durations = np.array([self.stance_duration, self.swing_duration, self.stance_duration, self.swing_duration])
-            self.cycle_duration = 2*self.stance_duration + 2*self.swing_duration
-            self.stance_duration_in_ticks = int(self.stance_duration/self.config.dt)
-            self.swing_duration_in_ticks = int(self.swing_duration/self.config.dt)
-            self.cycle_duration_in_ticks = 2*self.stance_duration_in_ticks + 2*self.swing_duration_in_ticks
-            self.phase_durations_in_ticks = np.array([self.stance_duration_in_ticks, self.swing_duration_in_ticks, self.stance_duration_in_ticks, self.swing_duration_in_ticks])
+            self.gait_number_of_phases = self.contact_schedule.shape[1]
+            self.gait_stance_duration_in_ticks = int(self._gait_stance_duration/self.config.dt)
+            self.gait_swing_duration_in_ticks = int(self._gait_swing_duration/self.config.dt)
+            self.gait_cycle_duration_in_ticks = 2*self.gait_stance_duration_in_ticks + 2*self.gait_swing_duration_in_ticks
+            self.gait_phase_durations_in_ticks = np.array([self.gait_stance_duration_in_ticks, self.gait_swing_duration_in_ticks, self.gait_stance_duration_in_ticks, self.gait_swing_duration_in_ticks])
             self.swing_height = 0.1
+            
+            self.leg_swing_duration_in_ticks = self.gait_swing_duration_in_ticks
+            self.leg_stance_duration_in_ticks = 2*self.gait_stance_duration_in_ticks + self.gait_swing_duration_in_ticks
