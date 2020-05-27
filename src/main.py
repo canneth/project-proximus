@@ -2,12 +2,31 @@
 import sim
 
 from Leg import Leg
-from Collywobble import Collywobble
+from Robot import Robot
+from Robot import Mode
+from Command import Command
+from Config import Config
+from MasterController import MasterController
 
 import numpy as np
 from math import pi as PI
 
 import time
+
+def ik_check(client_id, robot):
+    
+    _, foot_pos = sim.simxGetObjectPosition(client_id, robot.back_left_foot, robot.body_frame, sim.simx_opmode_blocking)
+    print("Target position: {}".format(foot_pos))
+
+    robot.front_left_leg.moveFoot([0.19302406907081604, 0.11094817519187927, -0.22628307342529297]) # Corresponds to joint angles (in degrees) [0, -45, 0]
+    robot.front_right_leg.moveFoot([0.19302406907081604, -0.11094817519187927, -0.22628307342529297]) # Corresponds to joint angles (in degrees) [0, -45, 0]
+    robot.back_left_leg.moveFoot([-0.1929716169834137, 0.11089962720870972, -0.22629320621490479]) # Corresponds to joint angles (in degrees) [0, -45, 0]
+    robot.back_right_leg.moveFoot([-0.19296878576278687, -0.11091902107000351, -0.22629079222679138]) # Corresponds to joint angles (in degrees) [0, -45, 0]
+
+    time.sleep(0.5)
+    
+    _, foot_pos = sim.simxGetObjectPosition(client_id, back_left_foot, body_frame, sim.simx_opmode_blocking)
+    print("Current position: {}".format(foot_pos))
 
 if __name__ == "__main__":
     ### BEGIN SIM CONNECTION ###
@@ -27,48 +46,43 @@ if __name__ == "__main__":
         ### GET OBJECT HANDLES ###
         _, world_frame = sim.simxGetObjectHandle(client_id, "world_frame", sim.simx_opmode_blocking)
 
+        config = Config()
+
+        # Master Controller
+        master_controller = MasterController(config)
+
         # Robot
-        robot = Collywobble(
+        robot = Robot(
             client_id,
-            stance_polygon_width = 0.18
+            stance_polygon_length = 0.4,
+            stance_polygon_width = 0.18,
+            stance_height = 0.225,
+            stride_length = 0.120,
+            swing_height = 0.08
         )
 
-        print("Setup done, entering while loop...")
-        
-        ### IK CHECK ###
-        # _, foot_pos = sim.simxGetObjectPosition(client_id, back_left_foot, body_frame, sim.simx_opmode_blocking)
-        # print("Target position: {}".format(foot_pos))
+        master_controller.step_once(robot)
+        time.sleep(1) # Wait for simulation to settle
 
-        # robot.front_left_leg.moveFoot([0.19302406907081604, 0.11094817519187927, -0.22628307342529297]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-        # robot.front_right_leg.moveFoot([0.19302406907081604, -0.11094817519187927, -0.22628307342529297]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-        # robot.back_left_leg.moveFoot([-0.1929716169834137, 0.11089962720870972, -0.22629320621490479]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-        # robot.back_right_leg.moveFoot([-0.19296878576278687, -0.11091902107000351, -0.22629079222679138]) # Corresponds to joint angles (in degrees) [0, -45, 0]
+        last_time = time.time()
 
-        # time.sleep(0.5)
-        
-        # _, foot_pos = sim.simxGetObjectPosition(client_id, back_left_foot, body_frame, sim.simx_opmode_blocking)
-        # print("Current position: {}".format(foot_pos))
-
-        ### MOVE ROBOT TO FEET ORIGINS FIRST ###
-        robot.moveFeetToOrigins()
-        time.sleep(2) # Wait for simulation to settle
-
-        phase = 0
-        base_phase_step = 0.005
-
-        direction_phase = 0
-        direction_phase_step = 0.00008
+        command = Command()
 
         ### LOOP ###
         while True:
-            circle_direction = [np.cos(direction_phase), np.sin(direction_phase)]
-            if phase >= 2*PI:
-                phase = phase - 2*PI
-            if direction_phase >= 2*PI:
-                direction_phase = direction_phase - 2*PI
-            robot.moveToPhaseInTrotTranslate(phase, direction_vector = [0, 1], stride_length = 0.1, swing_height = 0.16, swing_to_stance_ratio = 0.4)
-            phase = phase + base_phase_step
-            direction_phase = direction_phase + direction_phase_step
+
+            current_time = time.time()
+            elapsed_time = current_time - last_time
+            if (elapsed_time < config.dt):
+                continue
+
+            last_time = time.time()
+            command.mode = Mode.REST
+            command.stance_height = 0.2
+            command.body_roll = 10/180*PI
+            command.body_pitch = -15/180*PI
+            command.body_yaw = 20/180*PI
+            master_controller.step_once(robot, command)
 
         ### CLOSE CONNECTION TO SIM ###
         sim.simxGetPingTime(client_id)
