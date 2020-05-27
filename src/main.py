@@ -7,9 +7,13 @@ from Robot import Mode
 from Command import Command
 from Config import Config
 from MasterController import MasterController
+from DataLogger import DataLogger
+
+from collections import defaultdict
 
 import numpy as np
 from math import pi as PI
+from transforms3d.euler import euler2mat
 
 import time
 
@@ -61,6 +65,25 @@ if __name__ == "__main__":
             swing_height = 0.08
         )
 
+        # Data-logging stuff
+        data_field_list = (
+            [
+                "t",
+                "v_x_true", "v_y_true", "v_z_true",
+                "p_1x_true", "p_1y_true", "p_1z_true",
+                "p_2x_true", "p_2y_true", "p_2z_true",
+                "p_3x_true", "p_3y_true", "p_3z_true",
+                "p_4x_true", "p_4y_true", "p_4z_true",
+                "v_x_est", "v_y_est", "v_z_est",
+                "p_1x_est", "p_1y_est", "p_1z_est",
+                "p_2x_est", "p_2y_est", "p_2z_est",
+                "p_3x_est", "p_3y_est", "p_3z_est",
+                "p_4x_est", "p_4y_est", "p_4z_est"
+            ]
+        )
+        data_logger = DataLogger(
+            data_fields = data_field_list
+        )
 
         command = Command()
         command.stance_height = 0.2
@@ -68,10 +91,10 @@ if __name__ == "__main__":
         time.sleep(1) # Wait for simulation to settle
 
         last_time = time.time()
+        start_time = time.time()
 
         ### LOOP ###
         while True:
-
             current_time = time.time()
             elapsed_time = current_time - last_time
             if (elapsed_time < config.dt):
@@ -79,9 +102,57 @@ if __name__ == "__main__":
 
             last_time = time.time()
             command.mode = Mode.TROT
-            command.body_roll = np.deg2rad(10)
             command.body_velocity = [0.2, 0, 0]
             master_controller.stepOnce(robot, command)
+
+            # Collecting and formatting data for collection
+            t = time.time() - start_time
+            _, v_bb, _ = sim.simxGetObjectVelocity(client_id, robot.body_frame, sim.simx_opmode_streaming)
+            _, euler_angles = sim.simxGetObjectOrientation(client_id, robot.body_frame, world_frame, sim.simx_opmode_streaming)
+            _, p_1_rel = sim.simxGetObjectPosition(client_id, robot.front_left_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
+            _, p_2_rel = sim.simxGetObjectPosition(client_id, robot.front_right_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
+            _, p_3_rel = sim.simxGetObjectPosition(client_id, robot.back_left_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
+            _, p_4_rel = sim.simxGetObjectPosition(client_id, robot.back_right_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
+            R_0b = euler2mat(euler_angles[0], euler_angles[1], euler_angles[2])
+            v_0b = R_0b @ v_bb
+
+            data_dict = {key: 0 for key in data_field_list}
+            data_dict["t"] = t
+            data_dict["v_x_true"] = v_0b[0]
+            data_dict["v_y_true"] = v_0b[1]
+            data_dict["v_z_true"] = v_0b[2]
+            data_dict["p_1x_true"] = p_1_rel[0]
+            data_dict["p_1y_true"] = p_1_rel[1]
+            data_dict["p_1z_true"] = p_1_rel[2]
+            data_dict["p_2x_true"] = p_2_rel[0]
+            data_dict["p_2y_true"] = p_2_rel[1]
+            data_dict["p_2z_true"] = p_2_rel[2]
+            data_dict["p_3x_true"] = p_3_rel[0]
+            data_dict["p_3y_true"] = p_3_rel[1]
+            data_dict["p_3z_true"] = p_3_rel[2]
+            data_dict["p_4x_true"] = p_4_rel[0]
+            data_dict["p_4y_true"] = p_4_rel[1]
+            data_dict["p_4z_true"] = p_4_rel[2]
+            # TODO: Implement Kalman Filter and log the estimated states!
+            data_dict["v_x_est"] = 0
+            data_dict["v_y_est"] = 0
+            data_dict["v_z_est"] = 0
+            data_dict["p_1x_est"] = 0
+            data_dict["p_1y_est"] = 0
+            data_dict["p_1z_est"] = 0
+            data_dict["p_2x_est"] = 0
+            data_dict["p_2y_est"] = 0
+            data_dict["p_2z_est"] = 0
+            data_dict["p_3x_est"] = 0
+            data_dict["p_3y_est"] = 0
+            data_dict["p_3z_est"] = 0
+            data_dict["p_4x_est"] = 0
+            data_dict["p_4y_est"] = 0
+            data_dict["p_4z_est"] = 0
+
+            data_logger.writeData(
+                data_dict
+            )
 
         ### CLOSE CONNECTION TO SIM ###
         sim.simxGetPingTime(client_id)
