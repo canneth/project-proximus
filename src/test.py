@@ -2,12 +2,19 @@
 import sim
 import numpy as np
 
+class testClass:
+    def __init__(
+        self,
+        arg = 1
+    ):
+        self.arg = arg
+        if (self.arg == 1):
+            self.arg2 = 1
+
 
 if __name__ == "__main__":
-    arr = np.zeros((2, 3))
-    print(arr[:, 1])
-
-
+    test = testClass(arg = 0)
+    print(test.arg2)
     
     # ### BEGIN SIM CONNECTION ###
     # connection_successful = False

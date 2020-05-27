@@ -22,7 +22,6 @@ class Robot:
         stance_polygon_length = 0.4,
         stance_polygon_width = 0.2,
         stance_height = 0.225,
-        stride_length = 0.120,
         swing_height = 0.08
     ):
         
@@ -118,12 +117,52 @@ class Robot:
         self.stance_polygon_length = stance_polygon_length
         self.stance_polygon_width = stance_polygon_width
         self.stance_height = stance_height
-        self.foot_locations_wrt_body = np.zeros((3, 4)) # 3x4, Each column represents a foot
+        self.foot_locations_wrt_body_true = np.zeros((3, 4)) # 3x4, Each column represents a foot
+        self.foot_locations_wrt_body_assuming_no_body_rpy = np.zeros((3, 4))
         self.joint_angles = np.zeros((3, 4))
         self.ticks = 0
         self.mode = Mode.REST
 
+        self.foot_locations_wrt_body_at_rest = np.concatenate( \
+            ( \
+                np.array([[self.stance_polygon_length/2, self.stance_polygon_width/2, -self.stance_height]]).T, \
+                np.array([[self.stance_polygon_length/2, -self.stance_polygon_width/2, -self.stance_height]]).T, \
+                np.array([[-self.stance_polygon_length/2, self.stance_polygon_width/2, -self.stance_height]]).T, \
+                np.array([[-self.stance_polygon_length/2, -self.stance_polygon_width/2, -self.stance_height]]).T, \
+            ),
+            axis = 1
+        )
+
     def __repr__(self):
         print("An instance of the custom Robot class.")
+
+    def updateFootLocationsAssumingNoBodyRPY(self, foot_locations_wrt_body):
+        """
+        DESCRIPTION:
+        Since the trajectory of the foot without taking into account body rpy is used as a reference to compute the
+        true foot positions during the swing phase, self.foot_locations_wrt_body_assuming_no_body_rpy needs to be maintained
+        and updated separately from the true foot locations, at the same time.
+        This function updates self.foot_locations_wrt_body_assuming_no_body_rpy needs with the specified foot locations wrt body.
+
+        ARGUMENTS:
+        + foot_locations_wrt_body: A (3, 4) array; the foot locations sans body rpy.
+        """
+        self.foot_locations_wrt_body_assuming_no_body_rpy = foot_locations_wrt_body
+
+    def moveAllFeet(self, foot_locations_wrt_body):
+        """
+        DESCRIPTION:
+        Moves all feet to their respective locations as specified in foot_locations_wrt_body, where
+        each column represents the x, y, z coordinates of each foot.
+
+        ARUGMENTS:
+        + foot_locations_wrt_body: A (3, 4) array; Each column represents the x, y, z coordinates of the foot, [FL, FR, BL, BR].
+        """
+        self.front_left_leg.moveFoot(foot_locations_wrt_body[:, 0])
+        self.front_right_leg.moveFoot(foot_locations_wrt_body[:, 1])
+        self.back_left_leg.moveFoot(foot_locations_wrt_body[:, 2])
+        self.back_right_leg.moveFoot(foot_locations_wrt_body[:, 3])
+        # Update robot attributes
+        self.foot_locations_wrt_body = foot_locations_wrt_body
 
     

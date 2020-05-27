@@ -46,6 +46,7 @@ if __name__ == "__main__":
         ### GET OBJECT HANDLES ###
         _, world_frame = sim.simxGetObjectHandle(client_id, "world_frame", sim.simx_opmode_blocking)
 
+        # Create configuration object which stores all configuration parameters used by almost everything
         config = Config()
 
         # Master Controller
@@ -57,16 +58,17 @@ if __name__ == "__main__":
             stance_polygon_length = 0.4,
             stance_polygon_width = 0.18,
             stance_height = 0.225,
-            stride_length = 0.120,
             swing_height = 0.08
         )
 
-        master_controller.step_once(robot)
+
+        command = Command()
+        command.body_pitch = np.deg2rad(-8)
+        command.stance_height = 0.2
+        master_controller.stepOnce(robot, command)
         time.sleep(1) # Wait for simulation to settle
 
         last_time = time.time()
-
-        command = Command()
 
         ### LOOP ###
         while True:
@@ -77,12 +79,8 @@ if __name__ == "__main__":
                 continue
 
             last_time = time.time()
-            command.mode = Mode.REST
-            command.stance_height = 0.2
-            command.body_roll = 10/180*PI
-            command.body_pitch = -15/180*PI
-            command.body_yaw = 20/180*PI
-            master_controller.step_once(robot, command)
+            command.mode = Mode.TROT
+            master_controller.stepOnce(robot, command)
 
         ### CLOSE CONNECTION TO SIM ###
         sim.simxGetPingTime(client_id)
