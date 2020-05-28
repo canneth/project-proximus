@@ -33,6 +33,7 @@ class MasterController:
         leg_swing_controller = LegSwingController(gait_config = gait_controller.gait_config)
         # Find phases of each leg (swing or stance)
         contact_pattern = gait_controller.calculate_contact_pattern(robot.ticks)
+        robot.contact_pattern = contact_pattern
         new_foot_locations_wrt_body = np.zeros((3, 4))
         for leg_index in range(4):
             leg_phase = contact_pattern[leg_index] # 0 = swing, 1 = stance

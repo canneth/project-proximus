@@ -2,20 +2,14 @@
 import sim
 import numpy as np
 
-class testClass:
-    def __init__(
-        self,
-        arg = 1
-    ):
-        self.arg = arg
-        if (self.arg == 1):
-            self.arg2 = 1
 
 
 if __name__ == "__main__":
-    test = testClass(arg = 0)
-    print(test.arg2)
-    
+    arr = np.array([2, 4, 1, 5]).reshape(4)
+    contact_pattern = np.array([0, 1, 0, 1]).reshape(4)
+    contact_pattern[arr == 2] = 99
+    print(contact_pattern)
+        # if np.prod(arr[:, i] == pattern) :
     # ### BEGIN SIM CONNECTION ###
     # connection_successful = False
     # print("=== Programme START ===")

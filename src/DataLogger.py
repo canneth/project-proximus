@@ -21,7 +21,12 @@ class DataLogger:
         with open(self.save_file_path, 'a') as f:
             line = ""
             for key in list(dict_of_data.keys()):
-                line = line + re.sub("\[|\'|\]", "", "{}".format(dict_of_data[key])) + ", "
+                if key == "t":
+                    line = line + re.sub("\[|\'|\]", "", "{:.3f}".format(dict_of_data[key])) + ", "
+                elif (type(dict_of_data[key]) == float):
+                    line = line + re.sub("\[|\'|\]", "", "{:.6f}".format(dict_of_data[key])) + ", "
+                else:
+                    line = line + re.sub("\[|\'|\]", "", "{}".format(dict_of_data[key])) + ", "
             line = line.rstrip(", ") + "\n"
             f.write(line)
 
