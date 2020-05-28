@@ -75,12 +75,12 @@ class MasterController:
         robot.body_roll = command.body_roll
         robot.body_pitch = command.body_pitch
         robot.body_yaw = command.body_yaw
-        print("FL FOOT:: Phase: {} | xyz: {} | Touchdown location: {}".format(
-                contact_pattern[0],
-                robot.foot_locations_wrt_body[:, 0],
-                leg_swing_controller.calculateRaibertTouchdownLocation(robot, command, 0)
-            )
-        )
+        # print("FL FOOT:: Phase: {} | xyz: {} | Touchdown location: {}".format(
+        #         contact_pattern[0],
+        #         robot.foot_locations_wrt_body[:, 0],
+        #         leg_swing_controller.calculateRaibertTouchdownLocation(robot, command, 0)
+        #     )
+        # )
         
     def stepOnce(self, robot, command = None):
         """

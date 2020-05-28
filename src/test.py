@@ -5,15 +5,8 @@ from random import randint
 
 
 if __name__ == "__main__":
-    arr_1 = np.block(
-        [
-            [np.array([randint(0, 20), randint(0, 20), randint(0, 20)]).reshape(3, 1)],
-            [np.array([randint(0, 20), randint(0, 20), randint(0, 20)]).reshape(3, 1)],
-            [np.array([randint(0, 20), randint(0, 20), randint(0, 20)]).reshape(3, 1)],
-        ]
-    )
-    arr_2 = arr_1.reshape(9)
-    print(arr_1)
+    arr = np.array([3, 1, 4, 5]).reshape(4)
+    arr_2 = np.concatenate((arr, [2]), axis = 0)
     print(arr_2)
         # if np.prod(arr[:, i] == pattern) :
     # ### BEGIN SIM CONNECTION ###
