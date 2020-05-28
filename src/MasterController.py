@@ -66,6 +66,8 @@ class MasterController:
             body_rpy_matrix.T
             @ new_foot_locations_wrt_body
         )
+        # Update foot velocities in robot
+        robot.foot_velocities_wrt_body = (1.0/self.config.dt)*(new_foot_locations_wrt_body - robot.foot_locations_wrt_body_true)
         # Move feet to calculated positions
         robot.moveAllFeet(new_foot_locations_wrt_body) # Foot positions (true), joint angles in Legs and Robot are internally updated.
         # Update robot attributes

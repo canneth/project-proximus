@@ -1,4 +1,6 @@
 
+import sim
+
 class IMU:
     def __init__(
         self,

@@ -119,6 +119,7 @@ class Robot:
         self.stance_height = stance_height
         self.foot_locations_wrt_body_true = np.zeros((3, 4)) # 3x4, Each column represents a foot
         self.foot_locations_wrt_body_assuming_no_body_rpy = np.zeros((3, 4))
+        self.foot_velocities_wrt_body = np.zeros((3, 4))
         self.joint_angles = np.zeros((3, 4))
         self.contact_pattern = np.zeros((4))
         self.ticks = 0

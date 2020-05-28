@@ -44,6 +44,7 @@ def getContactPatternIndex(contact_pattern, gait_schedule):
     contact_pattern_index is {0, 1, 2, 3}, the column index of the gait_schedule that gives the column equal to contact_pattern.
     For contact_patterns that occur more than once in gait_schedule, the lowest index is returned.
     This is used to keep track of the Q matrix used in the Kalman Filter, since it changes with leg contacts.
+    NOTE: This is solely used for logging convenience, and not in the Kalman Filter.
 
     ARGUMENTS:
     + contact_pattern: A (1, 4) or (4, 1) array; The contact_pattern for the legs.
@@ -57,7 +58,7 @@ def getContactPatternIndex(contact_pattern, gait_schedule):
 def generateControlInputMatrix(imu, command):
     """
     DESCRIPTION:
-    Generates the control input matrix using sensor values from the imu and the velocity inputs from command.
+    Generates and returns the control input matrix using sensor values from the imu and the velocity inputs from command.
 
     ARGUMENTS:
     + imu: An IMU object
@@ -67,7 +68,7 @@ def generateControlInputMatrix(imu, command):
     + B: A (18, 1) array; it is the control input matrix.
     """
     # Read quaternion from IMU
-    q = np.array(imu.quaternion_vals)
+    q = np.roll(np.array(imu.quaternion_vals), 1) # Roll is necessary cuz quar2mat expects q = [w, x, y, z], but imu outputs q = [x, y, z, w]
     # Convert quaternion into rotation matrix
     R_0_b = quat2mat(q)
     # Read acceleration from IMU
@@ -82,7 +83,7 @@ def generateControlInputMatrix(imu, command):
     B = np.block(
         [
             [0.5*(dt**2)*a_0_b], # p_b
-            [0.5*dt*a_0_b + v_0_command], # v_b
+            [dt*a_0_b + dt*v_0_command], # v_b
             [np.zeros((3, 1))], # p_1
             [np.zeros((3, 1))], # p_2
             [np.zeros((3, 1))], # p_3
@@ -95,7 +96,7 @@ def generateStateCovarianceMatrix(p_b_std, v_b_std, p_1_std, p_2_std, p_3_std, p
     """
     DESCRIPTION:
     Generates a new state covariance matrix given the previous P_prev and the current contact_pattern_index.
-    Returns a P_new which is a modified P.
+    Returns this generated matrix as P_new which is a modified P.
     If P_prev = None and/or contact_pattern = None, then it creates a P_init to be fed as initial input into the Kalman Filter.
 
     ARGUMENTS:
@@ -114,9 +115,18 @@ def generateStateCovarianceMatrix(p_b_std, v_b_std, p_1_std, p_2_std, p_3_std, p
     I = np.identity(3)
     O = np.zeros((3, 3))
     p_i_stds = [p_1_std, p_2_std, p_3_std, p_4_std]
-    if ((P_prev is None) or (contact_pattern_index is None)):
+    if ((P_prev is None) or (contact_pattern is None)):
         # Create P_init
-        P_new = P_init
+        P_new = np.block(
+            [
+                [(p_b_std**2)*I, O, O, O, O, O], # p_b
+                [O, (v_b_std**2)*I, O, O, O, O], # v_b
+                [O, O, (p_1_std**2)*I, O, O, O], # p_1
+                [O, O, O, (p_2_std**2)*I, O, O], # p_2
+                [O, O, O, O, (p_3_std**2)*I, O], # p_3
+                [O, O, O, O, O, (p_4_std**2)*I] # p_4
+            ]
+        )
         return P_new
     else:
         P_new = np.copy(P_prev)
@@ -134,12 +144,11 @@ def generateStateCovarianceMatrix(p_b_std, v_b_std, p_1_std, p_2_std, p_3_std, p
                 P_new[block_index*n : (block_index + 1)*n, block_index*n : (block_index + 1)*n] = (p_i_stds[i]**2)*np.identity(n)
         return P_new
 
-def generateProcessCovarianceMatrix(v_b_std, p_1_std, p_2_std, p_3_std, p_4_std, dt, contact_pattern = None):
+def generateProcessCovarianceMatrix(v_b_std, p_1_std, p_2_std, p_3_std, p_4_std, dt, contact_pattern = [1, 1, 1, 1]):
     """
     DESCRIPTION:
     Generates a new process covariance matrix given the previous Q_prev and the current contact_pattern_index.
-    Returns a P_new which is a modified P.
-    If contact_pattern = None, then it assumes a contact pattern of [1, 1, 1, 1] (all legs in stance).
+    Returns this generated matrix as Q.
 
     ARGUMENTS:
     + v_b_std: A float; the scalar standard deviation representing the uncertainty in v_b.
@@ -156,31 +165,114 @@ def generateProcessCovarianceMatrix(v_b_std, p_1_std, p_2_std, p_3_std, p_4_std,
     I = np.identity(3)
     O = np.zeros((3, 3))
     Q_intermediate = Q_discrete_white_noise(2, dt = dt)
-    Q_body = np.block(
+    Q_body = np.block( # Q_body is (6, 6)
         [
-            (v_b_std**2)*[Q_intermediate[0, 0]*I, Q_intermediate[0, 1]*I],
-            (v_b_std**2)*[Q_intermediate[1, 0]*I, Q_intermediate[1, 1]*I],
+            [Q_intermediate[0, 0]*I, Q_intermediate[0, 1]*I],
+            [Q_intermediate[1, 0]*I, Q_intermediate[1, 1]*I],
         ]
     )
+    Q_body = (v_b_std**2)*Q_body
     p_i_stds = np.array([p_1_std, p_2_std, p_3_std, p_4_std]).reshape(4)
-    mask_from_contact_pattern = contact_pattern.reshape(4)
+    mask_from_contact_pattern = np.array(contact_pattern).reshape(4)
     inf = 10**100
     p_i_stds[mask_from_contact_pattern == 0] = inf # For feet in swing, send uncertainty into the sky
-    Q_feet = np.block(
+    Q_feet = np.block( # Q_feet is (12, 12)
         [
-            p_i_stds[0]*[I*dt, O, O, O],
-            p_i_stds[1]*[O, I*dt, O, O],
-            p_i_stds[2]*[O, O, I*dt, O],
-            p_i_stds[3]*[O, O, O, I*dt]
+            [p_i_stds[0]*I*dt, O, O, O],
+            [O, p_i_stds[1]*I*dt, O, O],
+            [O, O, p_i_stds[2]*I*dt, O],
+            [O, O, O, p_i_stds[3]*I*dt]
         ]
     )
     Q = np.block(
         [
-            [Q_body, np.zeros((4, 4))],
-            [np.zeros((4, 4)), Q_feet]
+            [Q_body, np.zeros((6, 12))],
+            [np.zeros((12, 6)), Q_feet]
         ]
     )
     return Q
+
+def generateMeasurementMatrix(robot, imu):
+    """
+    DESCRIPTION:
+    Generates and returns the measurement matrix z derived from the states tracked within the robot object and IMU sensor.
+
+    ARGUMENTS:
+    + robot: A Robot object; the robot from which to extract the necessary states.
+    + imu: An IMU object; the orientation of the robot used for reference frame transforms is extracted from this.
+
+    RETURNS:
+    + z: A (24,) array; the measurement matrix (really a vector).
+    """
+    z_p_1_in_b_frame = robot.foot_locations_wrt_body_true[:, 0].reshape(3, 1)
+    z_p_2_in_b_frame = robot.foot_locations_wrt_body_true[:, 1].reshape(3, 1)
+    z_p_3_in_b_frame = robot.foot_locations_wrt_body_true[:, 2].reshape(3, 1)
+    z_p_4_in_b_frame = robot.foot_locations_wrt_body_true[:, 3].reshape(3, 1)
+    z_v_1_in_b_frame = robot.foot_velocities_wrt_body[:, 0].reshape(3, 1)
+    z_v_2_in_b_frame = robot.foot_velocities_wrt_body[:, 1].reshape(3, 1)
+    z_v_3_in_b_frame = robot.foot_velocities_wrt_body[:, 2].reshape(3, 1)
+    z_v_4_in_b_frame = robot.foot_velocities_wrt_body[:, 3].reshape(3, 1)
+    # Read quaternion from IMU
+    q = np.roll(np.array(imu.quaternion_vals), 1) # Roll is needed since quat2mat requires q = [w, x, y, z], while imu outputs q = [x, y, z, w]
+    # Convert quaternion into rotation matrix
+    R_0_b = quat2mat(q)
+    # Change reference frame to world frame
+    z_p_1 = R_0_b @ z_p_1_in_b_frame
+    z_p_2 = R_0_b @ z_p_2_in_b_frame
+    z_p_3 = R_0_b @ z_p_3_in_b_frame
+    z_p_4 = R_0_b @ z_p_4_in_b_frame
+    z_v_1 = R_0_b @ z_v_1_in_b_frame
+    z_v_2 = R_0_b @ z_v_2_in_b_frame
+    z_v_3 = R_0_b @ z_v_3_in_b_frame
+    z_v_4 = R_0_b @ z_v_4_in_b_frame
+    # Build z
+    z = np.block(
+        [
+            [z_p_1],
+            [z_p_2],
+            [z_p_3],
+            [z_p_4],
+            [z_v_1],
+            [z_v_2],
+            [z_v_3],
+            [z_v_4]
+        ]
+    )
+    return z
+
+def generateMeasurementCovarianceMatrix(z_p_1_std, z_p_2_std, z_p_3_std, z_p_4_std, z_v_1_std, z_v_2_std, z_v_3_std, z_v_4_std):
+    """
+    DESCRIPTION:
+    Generates and returns a measurement covariance matrix given the respective standard deviations.
+
+    ARGUMENTS:
+    + z_p_1_std: A float; the standard deviation for the measurement z_p_1.
+    + z_p_2_std: A float; the standard deviation for the measurement z_p_2.
+    + z_p_3_std: A float; the standard deviation for the measurement z_p_3.
+    + z_p_4_std: A float; the standard deviation for the measurement z_p_4.
+    + z_v_1_std: A float; the standard deviation for the measurement z_v_1.
+    + z_v_2_std: A float; the standard deviation for the measurement z_v_2.
+    + z_v_3_std: A float; the standard deviation for the measurement z_v_3.
+    + z_v_4_std: A float; the standard deviation for the measurement z_v_4.
+
+    RETURNS:
+    + R: A (24, 24) array; the measurement covariance matrix.
+    """
+    I = np.identity(3) # For convenience
+    O = np.zeros((3, 3)) # For convenience
+    R = np.block(
+        [
+            [(z_p_1_std**2)*I, O, O, O,     O, O, O, O], # z_p_1
+            [O, (z_p_2_std**2)*I, O, O,     O, O, O, O], # z_p_2
+            [O, O, (z_p_3_std**2)*I, O,     O, O, O, O], # z_p_3
+            [O, O, O, (z_p_4_std**2)*I,     O, O, O, O], # z_p_4
+            [O, O, O, O,     (z_v_1_std**2)*I, O, O, O], # z_v_1
+            [O, O, O, O,     O, (z_v_2_std**2)*I, O, O], # z_v_2
+            [O, O, O, O,     O, O, (z_v_3_std**2)*I, O], # z_v_3
+            [O, O, O, O,     O, O, O, (z_v_4_std**2)*I]  # z_v_4
+        ]
+    )
+    return R
 
 if __name__ == "__main__":
     
@@ -200,26 +292,29 @@ if __name__ == "__main__":
     if connection_successful:
         ### GET OBJECT HANDLES ###
         _, world_frame = sim.simxGetObjectHandle(client_id, "world_frame", sim.simx_opmode_blocking)
-        
+        # Create configuration object which stores all configuration parameters used by almost everything
+        config = Config()
+        # Master Controller
+        master_controller = MasterController(config)
+        # Robot
+        robot = Robot(
+            client_id,
+            stance_polygon_length = 0.4,
+            stance_polygon_width = 0.18,
+            stance_height = 0.225,
+            swing_height = 0.08
+        )
+
         # Sensors
         imu = IMU(client_id)
 
-        # Kalman Filter variable preparation
+        ### Kalman Filter Setup ###
         dt = config.dt
-        x_init = np.block(
-            [
-                [np.zeros((3, 1))], # p_b
-                [np.zeros((3, 1))], # v_b
-                [robot.foot_locations_wrt_body_at_rest[:, 0].reshape(3, 1)], # p_1
-                [robot.foot_locations_wrt_body_at_rest[:, 1].reshape(3, 1)], # p_2
-                [robot.foot_locations_wrt_body_at_rest[:, 2].reshape(3, 1)], # p_3
-                [robot.foot_locations_wrt_body_at_rest[:, 3].reshape(3, 1)], # p_4
-            ]
-        )
-        
+
         I = np.identity(3) # For convenience
         O = np.zeros((3, 3)) # For convenience
 
+        # F should be (18, 18)
         F = np.block(
             [
                 [I, dt*I, O, O, O, O], # p_b
@@ -230,9 +325,42 @@ if __name__ == "__main__":
                 [O, O, O, O, O, I] # p_4
             ]
         )
-
-        B = generateControlInputMatrix(imu, command)
-        
+        # H should be (24, 18)
+        H = np.block(
+            [
+                [-1.0*I, O, I, O, O, O], # z_1 --- z_p_1
+                [-1.0*I, O, O, I, O, O], # z_2 --- z_p_2
+                [-1.0*I, O, O, O, I, O], # z_3 --- z_p_3
+                [-1.0*I, O, O, O, O, I], # z_4 --- z_p_4
+                [O, I, O, O, O, O], # z_5 --- z_v_1
+                [O, I, O, O, O, O], # z_6 --- z_v_2
+                [O, I, O, O, O, O], # z_7 --- z_v_3
+                [O, I, O, O, O, O], # z_8 --- z_v_4
+            ]
+        )
+        # R should be (24, 24)
+        R = generateMeasurementCovarianceMatrix(
+            z_p_1_std = 0.002,
+            z_p_2_std = 0.002,
+            z_p_3_std = 0.002,
+            z_p_4_std = 0.002,
+            z_v_1_std = 0.005,
+            z_v_2_std = 0.005,
+            z_v_3_std = 0.005,
+            z_v_4_std = 0.005
+        )
+        # x should be (18, 1)
+        x_init = np.block(
+            [
+                [np.zeros((3, 1))], # p_b
+                [np.zeros((3, 1))], # v_b
+                [robot.foot_locations_wrt_body_at_rest[:, 0].reshape(3, 1)], # p_1
+                [robot.foot_locations_wrt_body_at_rest[:, 1].reshape(3, 1)], # p_2
+                [robot.foot_locations_wrt_body_at_rest[:, 2].reshape(3, 1)], # p_3
+                [robot.foot_locations_wrt_body_at_rest[:, 3].reshape(3, 1)], # p_4
+            ]
+        ).reshape(18)
+        # P should be (18, 18)
         P_init = generateStateCovarianceMatrix(
             p_b_std = 0, # Very certain about initial body position
             v_b_std = 0, # Very certain about initial body velocity
@@ -242,8 +370,14 @@ if __name__ == "__main__":
             p_4_std = 0 # Very certain about initial foot position
         )
 
-        # Kalman Filter
-        kalman_filter = KalmanFilter(dim_x = 18, dim_z = 1)
+        # Create Kalman Filter
+        kalman_filter = KalmanFilter(dim_x = 18, dim_z = 24)
+        # P, Q and B are created and changed every iteration of the filter, and so are created within the main loop below
+        kalman_filter.F = F
+        kalman_filter.H = H
+        kalman_filter.R = R
+        kalman_filter.x = x_init
+        kalman_filter.P = P_init
 
         # Data-logging stuff
         data_field_list = (
@@ -259,26 +393,13 @@ if __name__ == "__main__":
                 "p_1x_est", "p_1y_est", "p_1z_est",
                 "p_2x_est", "p_2y_est", "p_2z_est",
                 "p_3x_est", "p_3y_est", "p_3z_est",
-                "p_4x_est", "p_4y_est", "p_4z_est"
+                "p_4x_est", "p_4y_est", "p_4z_est",
+                "y_p_1", "y_p_2", "y_p_3", "y_p_4",
+                "y_v_1", "y_v_2", "y_v_3", "y_v_4"
             ]
         )
         data_logger = DataLogger(
             data_fields = data_field_list
-        )
-
-        # Create configuration object which stores all configuration parameters used by almost everything
-        config = Config()
-
-        # Master Controller
-        master_controller = MasterController(config)
-
-        # Robot
-        robot = Robot(
-            client_id,
-            stance_polygon_length = 0.4,
-            stance_polygon_width = 0.18,
-            stance_height = 0.225,
-            swing_height = 0.08
         )
 
         command = Command()
@@ -300,11 +421,46 @@ if __name__ == "__main__":
             command.mode = Mode.TROT
             command.body_velocity = [0.4, 0, 0]
             master_controller.stepOnce(robot, command)
+            # Generate Q according to contact_pattern
+            # Q should be (18, 18)
+            Q = generateProcessCovarianceMatrix(
+                v_b_std = 0.1,
+                p_1_std = 0.05,
+                p_2_std = 0.05,
+                p_3_std = 0.05,
+                p_4_std = 0.05,
+                dt = dt,
+                contact_pattern = [1, 1, 1, 1]
+            )
+            # Generate P according to contact_pattern
+            # P should be (18, 18)
+            P = generateStateCovarianceMatrix(
+                p_b_std = 0, # Very certain about initial body position
+                v_b_std = 0, # Very certain about initial body velocity
+                p_1_std = 0, # Very certain about initial foot position
+                p_2_std = 0, # Very certain about initial foot position
+                p_3_std = 0, # Very certain about initial foot position
+                p_4_std = 0, # Very certain about initial foot position
+                P_prev = kalman_filter.P,
+                contact_pattern = robot.contact_pattern
+            )
+            # Generate control input matrix
+            # B should be (18, 1)
+            B = generateControlInputMatrix(imu, command)
+            # Register new P, Q and B into Kalman filter
+            kalman_filter.P = P
+            kalman_filter.Q = Q
+            kalman_filter.B = B
+            # Get "measurements" z
+            z = generateMeasurementMatrix(robot = robot, imu = imu)
+            # Run Kalman filter
+            kalman_filter.predict(u = np.array([1]), B = B)
+            kalman_filter.update(z = z)
 
-            # Collecting and formatting data for collection
+            ### Collecting and formatting data for collection ###
+            # Getting true values
             t = time.time() - start_time
             _, v_0b, _ = sim.simxGetObjectVelocity(client_id, robot.body_frame, sim.simx_opmode_streaming)
-            # _, euler_angles = sim.simxGetObjectOrientation(client_id, robot.body_frame, world_frame, sim.simx_opmode_streaming)
             _, p_1_rel = sim.simxGetObjectPosition(client_id, robot.front_left_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
             _, p_2_rel = sim.simxGetObjectPosition(client_id, robot.front_right_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
             _, p_3_rel = sim.simxGetObjectPosition(client_id, robot.back_left_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
@@ -313,8 +469,30 @@ if __name__ == "__main__":
                 contact_pattern = robot.contact_pattern,
                 gait_schedule = master_controller.trot_controller.gait_config.contact_schedule
             )
-            # R_0b = euler2mat(euler_angles[0], euler_angles[1], euler_angles[2])
-            # v_0b = R_0b @ v_bb
+            # Getting estimates from Kalman filter
+            v_x_est = float(kalman_filter.x.reshape(18)[3])
+            v_y_est = float(kalman_filter.x.reshape(18)[4])
+            v_z_est = float(kalman_filter.x.reshape(18)[5])
+            p_1x_est = float(kalman_filter.x.reshape(18)[6])
+            p_1y_est = float(kalman_filter.x.reshape(18)[7])
+            p_1z_est = float(kalman_filter.x.reshape(18)[8])
+            p_2x_est = float(kalman_filter.x.reshape(18)[9])
+            p_2y_est = float(kalman_filter.x.reshape(18)[10])
+            p_2z_est = float(kalman_filter.x.reshape(18)[11])
+            p_3x_est = float(kalman_filter.x.reshape(18)[12])
+            p_3y_est = float(kalman_filter.x.reshape(18)[13])
+            p_3z_est = float(kalman_filter.x.reshape(18)[14])
+            p_4x_est = float(kalman_filter.x.reshape(18)[15])
+            p_4y_est = float(kalman_filter.x.reshape(18)[16])
+            p_4z_est = float(kalman_filter.x.reshape(18)[17])
+            y_p_1 = float(kalman_filter.y.reshape(24)[1])
+            y_p_2 = float(kalman_filter.y.reshape(24)[2])
+            y_p_3 = float(kalman_filter.y.reshape(24)[3])
+            y_p_4 = float(kalman_filter.y.reshape(24)[4])
+            y_v_1 = float(kalman_filter.y.reshape(24)[5])
+            y_v_2 = float(kalman_filter.y.reshape(24)[6])
+            y_v_3 = float(kalman_filter.y.reshape(24)[7])
+            y_v_4 = float(kalman_filter.y.reshape(24)[8])
 
             data_dict = {key: 0 for key in data_field_list}
             data_dict["t"] = t
@@ -334,22 +512,29 @@ if __name__ == "__main__":
             data_dict["p_4x_true"] = p_4_rel[0]
             data_dict["p_4y_true"] = p_4_rel[1]
             data_dict["p_4z_true"] = p_4_rel[2]
-            # TODO: Implement Kalman Filter and log the estimated states!
-            data_dict["v_x_est"] = 0
-            data_dict["v_y_est"] = 0
-            data_dict["v_z_est"] = 0
-            data_dict["p_1x_est"] = 0
-            data_dict["p_1y_est"] = 0
-            data_dict["p_1z_est"] = 0
-            data_dict["p_2x_est"] = 0
-            data_dict["p_2y_est"] = 0
-            data_dict["p_2z_est"] = 0
-            data_dict["p_3x_est"] = 0
-            data_dict["p_3y_est"] = 0
-            data_dict["p_3z_est"] = 0
-            data_dict["p_4x_est"] = 0
-            data_dict["p_4y_est"] = 0
-            data_dict["p_4z_est"] = 0
+            data_dict["v_x_est"] = v_x_est
+            data_dict["v_y_est"] = v_y_est
+            data_dict["v_z_est"] = v_z_est
+            data_dict["p_1x_est"] = p_1x_est
+            data_dict["p_1y_est"] = p_1y_est
+            data_dict["p_1z_est"] = p_1z_est
+            data_dict["p_2x_est"] = p_2x_est
+            data_dict["p_2y_est"] = p_2y_est
+            data_dict["p_2z_est"] = p_2z_est
+            data_dict["p_3x_est"] = p_3x_est
+            data_dict["p_3y_est"] = p_3y_est
+            data_dict["p_3z_est"] = p_3z_est
+            data_dict["p_4x_est"] = p_4x_est
+            data_dict["p_4y_est"] = p_4y_est
+            data_dict["p_4z_est"] = p_4z_est
+            data_dict["y_p_1"] = y_p_1
+            data_dict["y_p_2"] = y_p_2
+            data_dict["y_p_3"] = y_p_3
+            data_dict["y_p_4"] = y_p_4
+            data_dict["y_v_1"] = y_v_1
+            data_dict["y_v_2"] = y_v_2
+            data_dict["y_v_3"] = y_v_3
+            data_dict["y_v_4"] = y_v_4
 
             data_logger.writeData(
                 data_dict

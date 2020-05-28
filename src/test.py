@@ -1,14 +1,20 @@
 
 import sim
 import numpy as np
-
+from random import randint
 
 
 if __name__ == "__main__":
-    arr = np.array([2, 4, 1, 5]).reshape(4)
-    contact_pattern = np.array([0, 1, 0, 1]).reshape(4)
-    contact_pattern[arr == 2] = 99
-    print(contact_pattern)
+    arr_1 = np.block(
+        [
+            [np.array([randint(0, 20), randint(0, 20), randint(0, 20)]).reshape(3, 1)],
+            [np.array([randint(0, 20), randint(0, 20), randint(0, 20)]).reshape(3, 1)],
+            [np.array([randint(0, 20), randint(0, 20), randint(0, 20)]).reshape(3, 1)],
+        ]
+    )
+    arr_2 = arr_1.reshape(9)
+    print(arr_1)
+    print(arr_2)
         # if np.prod(arr[:, i] == pattern) :
     # ### BEGIN SIM CONNECTION ###
     # connection_successful = False
