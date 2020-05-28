@@ -77,7 +77,7 @@ class MasterController:
         robot.body_yaw = command.body_yaw
         # print("FL FOOT:: Phase: {} | xyz: {} | Touchdown location: {}".format(
         #         contact_pattern[0],
-        #         robot.foot_locations_wrt_body[:, 0],
+        #         robot.foot_locations_wrt_body_true[:, 0],
         #         leg_swing_controller.calculateRaibertTouchdownLocation(robot, command, 0)
         #     )
         # )
@@ -115,6 +115,8 @@ class MasterController:
                 ),
                 axis = 1
             )
+            # Track foot trajectory without body rpy
+            robot.updateFootLocationsAssumingNoBodyRPY(new_foot_locations_wrt_body)
             # Desired body orientation matrix
             body_rpy_matrix = (
                 euler2mat(
@@ -130,8 +132,6 @@ class MasterController:
             )
             # Move feet to calculated positions
             robot.moveAllFeet(new_foot_locations_wrt_body) # Foot positions, joint angles in Legs and Robot are internally updated.
-            # Track foot trajectory without body rpy
-            robot.updateFootLocationsAssumingNoBodyRPY(new_foot_locations_wrt_body)
             # Update robot resting foot locations
             robot.foot_locations_wrt_body_at_rest = new_foot_locations_wrt_body
             # Update robot attributes

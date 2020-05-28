@@ -3,4 +3,4 @@ class Config:
     def __init__(
         self
     ):
-        self.dt = 0.05 # 50ms
+        self.dt = 0.005 # 5ms

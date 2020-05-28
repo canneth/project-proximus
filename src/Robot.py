@@ -121,7 +121,7 @@ class Robot:
         self.foot_locations_wrt_body_assuming_no_body_rpy = np.zeros((3, 4))
         self.foot_velocities_wrt_body = np.zeros((3, 4))
         self.joint_angles = np.zeros((3, 4))
-        self.contact_pattern = np.zeros((4))
+        self.contact_pattern = np.ones((4)) # By default, all legs in stance
         self.ticks = 0
         self.mode = Mode.REST
 
@@ -165,6 +165,6 @@ class Robot:
         self.back_left_leg.moveFoot(foot_locations_wrt_body[:, 2])
         self.back_right_leg.moveFoot(foot_locations_wrt_body[:, 3])
         # Update robot attributes
-        self.foot_locations_wrt_body = foot_locations_wrt_body
+        self.foot_locations_wrt_body_true = foot_locations_wrt_body
 
     

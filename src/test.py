@@ -5,9 +5,10 @@ from random import randint
 
 
 if __name__ == "__main__":
-    arr = np.array([3, 1, 4, 5]).reshape(4)
-    arr_2 = np.concatenate((arr, [2]), axis = 0)
-    print(arr_2)
+    arr = np.array([3, 1, 4, 5]).reshape(2, 2)
+    arr_2 = np.concatenate((arr, [[2, 2]]), axis = 0)
+    arr_3 = np.concatenate((arr_2, np.zeros((3, 1))), axis = 1)
+    print(arr_3)
         # if np.prod(arr[:, i] == pattern) :
     # ### BEGIN SIM CONNECTION ###
     # connection_successful = False

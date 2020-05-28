@@ -83,7 +83,7 @@ def generateControlInputMatrix(imu, command):
     B = np.block(
         [
             [0.5*(dt**2)*a_0_b], # p_b
-            [dt*a_0_b + dt*v_0_command], # v_b
+            [dt*a_0_b], # v_b
             [np.zeros((3, 1))], # p_1
             [np.zeros((3, 1))], # p_2
             [np.zeros((3, 1))], # p_3
@@ -202,16 +202,17 @@ def generateMeasurementMatrix(robot, imu):
     + imu: An IMU object; the orientation of the robot used for reference frame transforms is extracted from this.
 
     RETURNS:
-    + z: A (24,) array; the measurement matrix (really a vector).
+    + z: A (25,) array; the measurement matrix (really a vector).
     """
     z_p_1_in_b_frame = robot.foot_locations_wrt_body_true[:, 0].reshape(3, 1)
     z_p_2_in_b_frame = robot.foot_locations_wrt_body_true[:, 1].reshape(3, 1)
     z_p_3_in_b_frame = robot.foot_locations_wrt_body_true[:, 2].reshape(3, 1)
     z_p_4_in_b_frame = robot.foot_locations_wrt_body_true[:, 3].reshape(3, 1)
-    z_v_1_in_b_frame = robot.foot_velocities_wrt_body[:, 0].reshape(3, 1)
-    z_v_2_in_b_frame = robot.foot_velocities_wrt_body[:, 1].reshape(3, 1)
-    z_v_3_in_b_frame = robot.foot_velocities_wrt_body[:, 2].reshape(3, 1)
-    z_v_4_in_b_frame = robot.foot_velocities_wrt_body[:, 3].reshape(3, 1)
+    z_v_1_in_b_frame = -1.0*robot.foot_velocities_wrt_body[:, 0].reshape(3, 1) # This is an approximation of body velocity, which is -ve of foot velocity
+    z_v_2_in_b_frame = -1.0*robot.foot_velocities_wrt_body[:, 1].reshape(3, 1) # This is an approximation of body velocity, which is -ve of foot velocity
+    z_v_3_in_b_frame = -1.0*robot.foot_velocities_wrt_body[:, 2].reshape(3, 1) # This is an approximation of body velocity, which is -ve of foot velocity
+    z_v_4_in_b_frame = -1.0*robot.foot_velocities_wrt_body[:, 3].reshape(3, 1) # This is an approximation of body velocity, which is -ve of foot velocity
+    z_b_height = robot.stance_height
     # Read quaternion from IMU
     q = np.roll(np.array(imu.quaternion_vals), 1) # Roll is needed since quat2mat requires q = [w, x, y, z], while imu outputs q = [x, y, z, w]
     # Convert quaternion into rotation matrix
@@ -235,12 +236,13 @@ def generateMeasurementMatrix(robot, imu):
             [z_v_1],
             [z_v_2],
             [z_v_3],
-            [z_v_4]
+            [z_v_4],
+            [z_b_height]
         ]
     )
     return z
 
-def generateMeasurementCovarianceMatrix(z_p_1_std, z_p_2_std, z_p_3_std, z_p_4_std, z_v_1_std, z_v_2_std, z_v_3_std, z_v_4_std, contact_pattern = [1, 1, 1, 1]):
+def generateMeasurementCovarianceMatrix(z_p_1_std, z_p_2_std, z_p_3_std, z_p_4_std, z_v_1_std, z_v_2_std, z_v_3_std, z_v_4_std, z_b_height_std, contact_pattern = [1, 1, 1, 1]):
     """
     DESCRIPTION:
     Generates and returns a measurement covariance matrix given the respective standard deviations.
@@ -256,10 +258,11 @@ def generateMeasurementCovarianceMatrix(z_p_1_std, z_p_2_std, z_p_3_std, z_p_4_s
     + z_v_2_std: A float; the standard deviation for the measurement z_v_2.
     + z_v_3_std: A float; the standard deviation for the measurement z_v_3.
     + z_v_4_std: A float; the standard deviation for the measurement z_v_4.
+    + z_b_height_std: A float; the standard deviation for the measurement z_b_height.
     + contact_pattern: A (4) array; the contact pattern of the feet, where 0 = swing, 1 = stance.
 
     RETURNS:
-    + R: A (24, 24) array; the measurement covariance matrix.
+    + R: A (25, 25) array; the measurement covariance matrix.
     """
     I = np.identity(3) # For convenience
     O = np.zeros((3, 3)) # For convenience
@@ -278,8 +281,16 @@ def generateMeasurementCovarianceMatrix(z_p_1_std, z_p_2_std, z_p_3_std, z_p_4_s
             [O, O, O, O,     (z_v_i_stds[0]**2)*I, O, O, O], # z_v_1
             [O, O, O, O,     O, (z_v_i_stds[1]**2)*I, O, O], # z_v_2
             [O, O, O, O,     O, O, (z_v_i_stds[2]**2)*I, O], # z_v_3
-            [O, O, O, O,     O, O, O, (z_v_i_stds[3]**2)*I]  # z_v_4
+            [O, O, O, O,     O, O, O, (z_v_i_stds[3]**2)*I],  # z_v_4
         ]
+    )
+    R = np.concatenate((R, np.zeros((24, 1))), axis = 1)
+    R = np.concatenate(
+        (
+            R,
+            np.concatenate((np.zeros((24)), [z_b_height_std**2]), axis = 0).reshape(1, 25)  # z_b_height
+        ),
+        axis = 0
     )
     return R
 
@@ -334,7 +345,7 @@ if __name__ == "__main__":
                 [O, O, O, O, O, I] # p_4
             ]
         )
-        # H should be (24, 18)
+        # H should be (25, 18)
         H = np.block(
             [
                 [-1.0*I, O, I, O, O, O], # z_1 --- z_p_1
@@ -345,6 +356,7 @@ if __name__ == "__main__":
                 [O, I, O, O, O, O], # z_6 --- z_v_2
                 [O, I, O, O, O, O], # z_7 --- z_v_3
                 [O, I, O, O, O, O], # z_8 --- z_v_4
+                [0, 0, 1, np.zeros((15))], # z_9 --- z_b_height
             ]
         )
         # x should be (18, 1)
@@ -370,7 +382,7 @@ if __name__ == "__main__":
         )
 
         # Create Kalman Filter
-        kalman_filter = KalmanFilter(dim_x = 18, dim_z = 24)
+        kalman_filter = KalmanFilter(dim_x = 18, dim_z = 25)
         # Q, R and B are created and changed every iteration of the filter, and so are created within the main loop below
         kalman_filter.F = F
         kalman_filter.H = H
@@ -428,34 +440,35 @@ if __name__ == "__main__":
                 command.stance_height = 0.2
                 command.mode = Mode.REST
                 command.body_velocity = [0, 0, 0]
-                master_controller.stepOnce(robot, command)
             else:
+                command.stance_height = 0.2
                 command.mode = Mode.TROT
-                command.body_velocity = [0.4, 0, 0]
+                command.body_velocity = [0.3, 0, 0]
 
             master_controller.stepOnce(robot, command)
             # Generate Q according to contact_pattern
             # Q should be (18, 18)
             Q = generateProcessCovarianceMatrix(
-                v_b_std = 0.2,
-                p_1_std = 0.2,
-                p_2_std = 0.2,
-                p_3_std = 0.2,
-                p_4_std = 0.2,
+                v_b_std = 0.1,
+                p_1_std = 0.08,
+                p_2_std = 0.08,
+                p_3_std = 0.08,
+                p_4_std = 0.08,
                 dt = dt,
                 contact_pattern = robot.contact_pattern
             )
             # Generate R according to contact_pattern
             # R should be (24, 24)
             R = generateMeasurementCovarianceMatrix(
-                z_p_1_std = 0.01, # Much trust in measurements
-                z_p_2_std = 0.01,
-                z_p_3_std = 0.01,
-                z_p_4_std = 0.01,
-                z_v_1_std = 0.01,
-                z_v_2_std = 0.01,
-                z_v_3_std = 0.01,
-                z_v_4_std = 0.01,
+                z_p_1_std = 0.02, # Much trust in measurements
+                z_p_2_std = 0.02,
+                z_p_3_std = 0.02,
+                z_p_4_std = 0.02,
+                z_v_1_std = 0.02,
+                z_v_2_std = 0.02,
+                z_v_3_std = 0.02,
+                z_v_4_std = 0.02,
+                z_b_height_std = 0.1,
                 contact_pattern = robot.contact_pattern
             )
             # Generate control input matrix
@@ -507,30 +520,30 @@ if __name__ == "__main__":
             p_4x_est = float(kalman_filter.x.reshape(18)[15])
             p_4y_est = float(kalman_filter.x.reshape(18)[16])
             p_4z_est = float(kalman_filter.x.reshape(18)[17])
-            y_p_1x = float(kalman_filter.y.reshape(24)[0])
-            y_p_1y = float(kalman_filter.y.reshape(24)[1])
-            y_p_1z = float(kalman_filter.y.reshape(24)[2])
-            y_p_2x = float(kalman_filter.y.reshape(24)[3])
-            y_p_2y = float(kalman_filter.y.reshape(24)[4])
-            y_p_2z = float(kalman_filter.y.reshape(24)[5])
-            y_p_3x = float(kalman_filter.y.reshape(24)[6])
-            y_p_3y = float(kalman_filter.y.reshape(24)[7])
-            y_p_3z = float(kalman_filter.y.reshape(24)[8])
-            y_p_4x = float(kalman_filter.y.reshape(24)[9])
-            y_p_4y = float(kalman_filter.y.reshape(24)[10])
-            y_p_4z = float(kalman_filter.y.reshape(24)[11])
-            y_v_1x = float(kalman_filter.y.reshape(24)[12])
-            y_v_1y = float(kalman_filter.y.reshape(24)[13])
-            y_v_1z = float(kalman_filter.y.reshape(24)[14])
-            y_v_2x = float(kalman_filter.y.reshape(24)[15])
-            y_v_2y = float(kalman_filter.y.reshape(24)[16])
-            y_v_2z = float(kalman_filter.y.reshape(24)[17])
-            y_v_3x = float(kalman_filter.y.reshape(24)[18])
-            y_v_3y = float(kalman_filter.y.reshape(24)[19])
-            y_v_3z = float(kalman_filter.y.reshape(24)[20])
-            y_v_4x = float(kalman_filter.y.reshape(24)[21])
-            y_v_4y = float(kalman_filter.y.reshape(24)[22])
-            y_v_4z = float(kalman_filter.y.reshape(24)[23])
+            y_p_1x = float(kalman_filter.y.reshape(25)[0])
+            y_p_1y = float(kalman_filter.y.reshape(25)[1])
+            y_p_1z = float(kalman_filter.y.reshape(25)[2])
+            y_p_2x = float(kalman_filter.y.reshape(25)[3])
+            y_p_2y = float(kalman_filter.y.reshape(25)[4])
+            y_p_2z = float(kalman_filter.y.reshape(25)[5])
+            y_p_3x = float(kalman_filter.y.reshape(25)[6])
+            y_p_3y = float(kalman_filter.y.reshape(25)[7])
+            y_p_3z = float(kalman_filter.y.reshape(25)[8])
+            y_p_4x = float(kalman_filter.y.reshape(25)[9])
+            y_p_4y = float(kalman_filter.y.reshape(25)[10])
+            y_p_4z = float(kalman_filter.y.reshape(25)[11])
+            y_v_1x = float(kalman_filter.y.reshape(25)[12])
+            y_v_1y = float(kalman_filter.y.reshape(25)[13])
+            y_v_1z = float(kalman_filter.y.reshape(25)[14])
+            y_v_2x = float(kalman_filter.y.reshape(25)[15])
+            y_v_2y = float(kalman_filter.y.reshape(25)[16])
+            y_v_2z = float(kalman_filter.y.reshape(25)[17])
+            y_v_3x = float(kalman_filter.y.reshape(25)[18])
+            y_v_3y = float(kalman_filter.y.reshape(25)[19])
+            y_v_3z = float(kalman_filter.y.reshape(25)[20])
+            y_v_4x = float(kalman_filter.y.reshape(25)[21])
+            y_v_4y = float(kalman_filter.y.reshape(25)[22])
+            y_v_4z = float(kalman_filter.y.reshape(25)[23])
 
             data_dict = {key: 0 for key in data_field_list}
             data_dict["t"] = t
