@@ -70,7 +70,7 @@ class LegSwingController:
         capture_point = np.sqrt(nominal_gait_height/gravitational_constant)*(current_velocity - desired_velocity)
         return capture_point
 
-    def calculateNewFootLocation(self, robot, command, leg_index, swing_proportion_completed):
+    def calculateNewFootLocation(self, robot, command, leg_index, swing_proportion_completed, trajectory_shape = 0, use_capture_point = False):
         """
         DESCRIPTION:
         Calculates and returns the new foot position (wrt body) after a single tick.
@@ -80,6 +80,8 @@ class LegSwingController:
         + command: A Command object; it contains the input commands into the robot.
         + leg_index: An integer; The index of the leg to calculate for: (FL = 0, FR = 1, BL = 2, BR = 3).
         + swing_proportion_completed: A float; the proportion of the swing phase completed by the foot.
+        + trajectory_shape: An integer; 0 = semi-circular, 1 = trianglular
+        + use_capture_point: A boolean; True if you want to use capture point, False otherwise.
 
         RETURNS:
         + new_foot_location: A (3,) array; The x, y, z coordinates of the new foot position (wrt body) after a single tick.
@@ -88,11 +90,17 @@ class LegSwingController:
         current_foot_location_assuming_no_body_rpy = robot.foot_locations_wrt_body_assuming_no_body_rpy[:, leg_index]
         capture_point = self.calculateCapturePoint(robot, command, leg_index)
         raibert_touchdown_location = self.calculateRaibertTouchdownLocation(robot, command, leg_index)
-        touchdown_location = raibert_touchdown_location + capture_point
+        touchdown_location = raibert_touchdown_location if (use_capture_point == False) else (raibert_touchdown_location + capture_point)
         time_to_touchdown = self.gait_config.config.dt * self.gait_config.leg_swing_duration_in_ticks * (1.0 - swing_proportion_completed)
         foot_delta_p = (touchdown_location - current_foot_location_assuming_no_body_rpy)/(time_to_touchdown / self.gait_config.config.dt)
         foot_delta_p[2] = 0
-        z_from_ground = self.gait_config.swing_height*np.sin(swing_proportion_completed*PI)
+        if (trajectory_shape == 0):
+            z_from_ground = self.gait_config.swing_height*np.sin(swing_proportion_completed*PI)
+        elif (trajectory_shape == 1):
+            if (swing_proportion_completed <= 0.5):
+                z_from_ground = self.gait_config.swing_height*swing_proportion_completed
+            else:
+                z_from_ground = self.gait_config.swing_height*(1 - swing_proportion_completed)
         new_foot_location = current_foot_location_assuming_no_body_rpy + foot_delta_p
         new_foot_location[2] = -command.stance_height + z_from_ground
         return new_foot_location

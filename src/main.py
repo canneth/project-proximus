@@ -315,7 +315,11 @@ if __name__ == "__main__":
         # Create configuration object which stores all configuration parameters used by almost everything
         config = Config()
         # Master Controller
-        master_controller = MasterController(config)
+        master_controller = MasterController(
+            config = config,
+            use_capture_point = False,
+            use_vpsp = False
+        )
         # Robot
         robot = Robot(
             client_id,
@@ -419,7 +423,8 @@ if __name__ == "__main__":
                 "P_p_1x_std", "P_p_1y_std", "P_p_1z_std",
                 "P_p_2x_std", "P_p_2y_std", "P_p_2z_std",
                 "P_p_3x_std", "P_p_3y_std", "P_p_3z_std",
-                "P_p_4x_std", "P_p_4y_std", "P_p_4z_std"
+                "P_p_4x_std", "P_p_4y_std", "P_p_4z_std",
+                "p_vpsp_x", "p_vpsp_y", "p_vpsp_z"
             ]
         )
         data_logger = DataLogger(
@@ -451,7 +456,7 @@ if __name__ == "__main__":
             elif (time_since_start < end_time):
                 command.stance_height = 0.2
                 command.mode = Mode.TROT
-                command.body_velocity = [0.3, 0, 0]
+                command.body_velocity = [0, 0, 0]
                 command.swing_height = 0.15
             else:
                 # End sim
@@ -669,6 +674,9 @@ if __name__ == "__main__":
             data_dict["P_p_4x_std"] = P_p_4x_std
             data_dict["P_p_4y_std"] = P_p_4y_std
             data_dict["P_p_4z_std"] = P_p_4z_std
+            data_dict["p_vpsp_x"] = robot.p_vpsp[0]
+            data_dict["p_vpsp_y"] = robot.p_vpsp[1]
+            data_dict["p_vpsp_z"] = robot.p_vpsp[2]
 
             data_logger.writeData(
                 data_dict

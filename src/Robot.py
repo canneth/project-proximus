@@ -125,6 +125,8 @@ class Robot:
         self.ticks = 0
         self.mode = Mode.REST
 
+        self.p_vpsp = np.zeros((3))
+
         self.foot_locations_wrt_body_at_rest = np.concatenate( \
             ( \
                 np.array([[self.stance_polygon_length/2, self.stance_polygon_width/2, -self.stance_height]]).T, \

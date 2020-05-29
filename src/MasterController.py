@@ -14,11 +14,15 @@ from scipy.special import erf
 class MasterController:
     def __init__(
         self,
-        config
+        config,
+        use_capture_point = False,
+        use_vpsp = False
     ):
 
         self.config = config
         self.trot_controller = GaitController(config = config, gait = Gait.TROT)
+        self.use_capture_point = use_capture_point
+        self.use_vpsp = use_vpsp
 
     def calculateFootLocationsForNextGaitStep(self, robot, command, gait_controller):
         """
@@ -50,34 +54,41 @@ class MasterController:
             if (leg_phase == 0):
                 # Leg is in swing phase
                 leg_swing_proportion_completed = (
-                    gait_controller.calculateTicksIntoCurrentLegPhase(robot.ticks)
+                    gait_controller.calculateTicksIntoCurrentLegPhase(ticks = robot.ticks, leg_index = leg_index)
                     / gait_controller.gait_config.leg_swing_duration_in_ticks
                 )
                 new_foot_locations_wrt_body[:, leg_index] = (
-                    leg_swing_controller.calculateNewFootLocation(robot, command, leg_index, leg_swing_proportion_completed)
+                    leg_swing_controller.calculateNewFootLocation(
+                        robot = robot,
+                        command = command,
+                        leg_index = leg_index,
+                        swing_proportion_completed = leg_swing_proportion_completed,
+                        trajectory_shape = 1, # 0 = semi-circular, 1 = triangular
+                        use_capture_point = self.use_capture_point
+                    )
                 )
-                foot_phase_proportions_completed[i] = leg_swing_proportion_completed
+                foot_phase_proportions_completed[leg_index] = leg_swing_proportion_completed
             elif (leg_phase == 1):
                 # Leg is in stance phase
                 leg_stance_proportion_completed = (
-                    gait_controller.calculateTicksIntoCurrentLegPhase(robot.ticks)
+                    gait_controller.calculateTicksIntoCurrentLegPhase(ticks = robot.ticks, leg_index = leg_index)
                     / gait_controller.gait_config.leg_stance_duration_in_ticks
                 )
                 new_foot_locations_wrt_body[:, leg_index] = leg_stance_controller.calculateNewFootLocation(robot, command, leg_index)
-                foot_phase_proportions_completed[i] = leg_swing_proportion_completed
+                foot_phase_proportions_completed[leg_index] = leg_stance_proportion_completed
 
         raibert_td = leg_swing_controller.calculateRaibertTouchdownLocation(robot = robot, command = command, leg_index = 0)
         capture_point = leg_swing_controller.calculateCapturePoint(robot = robot, command = command, leg_index = 0)
 
-        np.set_printoptions(precision = 3, suppress = True)
-        print("FL FOOT:: Phase: {} | xyz: {} | Raibert TD: {} | Capture point: {} | Commanded TD: {}".format(
-                contact_pattern[0],
-                new_foot_locations_wrt_body[:, 0],
-                raibert_td,
-                capture_point,
-                raibert_td + capture_point
-            )
-        )
+        # np.set_printoptions(precision = 3, suppress = True)
+        # print("FL FOOT:: Phase: {} | xyz: {} | Raibert TD: {} | Capture point: {} | Commanded TD: {}".format(
+        #         contact_pattern[0],
+        #         new_foot_locations_wrt_body[:, 0],
+        #         raibert_td,
+        #         capture_point,
+        #         raibert_td + capture_point
+        #     )
+        # )
 
         return new_foot_locations_wrt_body, contact_pattern, foot_phase_proportions_completed
 
@@ -139,16 +150,36 @@ class MasterController:
 
         RETURNS:
         + p_b_vpsp: A (3,) array; the recommended body location, wrt current body location, to move the body towards as recommended by the VPSP.
+        z-coordinate is set to 0 because it is irrelevant to the VPSP.
         """
         # Calculate weights for each foot
         foot_weights = np.zeros((4))
         for i in range(4):
-            foot_weights[i] = calculateVPSPFootWeight(
+            foot_weights[i] = self.calculateVPSPFootWeight(
                 leg_phase_proportion_completed = foot_phase_proportions_completed.reshape((4))[i],
                 leg_phase = contact_pattern.reshape((4))[i],
             )
-            # TODO: You last left off here! Calculate virtual points, etc...
+        # Calculate the virtual points for each leg
+        virtual_points = np.zeros((4, 2, 3)) # 4 legs, 2 virtual points per leg, 3 coordinates per virtual point
+        ccw_leg_indicies = {0: 2, 2: 3, 3: 1, 1: 0} # CCW of leg 0 is 2, CCW of leg 2 is 3, CCW of leg 3 is 1, CCW of leg 1 is 0
+        cw_leg_indicies = {0: 1, 1: 3, 3: 2, 2: 0} # CW of leg 0 is 1, CW of leg 1 is 3, CW of leg 3 is 2, CW of leg 2 is 0
+        for i in range(4):
+            virtual_point_cw = new_foot_locations_wrt_body[:, i]*foot_weights[i] + new_foot_locations_wrt_body[:, i]*foot_weights[cw_leg_indicies[i]]
+            virtual_point_ccw = new_foot_locations_wrt_body[:, i]*foot_weights[i] + new_foot_locations_wrt_body[:, i]*foot_weights[ccw_leg_indicies[i]]
+            virtual_points[i, 0, :] = virtual_point_cw
+            virtual_points[i, 1, :] = virtual_point_ccw
+        # Calculate the VPSP verticies for each leg
+        vpsp_vertices = np.zeros((3, 4))
+        for i in range(4):
+            vpsp_vertices[:, i] = (
+                foot_weights[i]*new_foot_locations_wrt_body[:, i]
+                + foot_weights[cw_leg_indicies[i]]*virtual_points[i, 0, :]
+                + foot_weights[ccw_leg_indicies[i]]*virtual_points[i, 1, :]
+            )
+        p_b_vpsp = 0.25*np.sum(vpsp_vertices, axis = 1) # Average across columns; average of all 4 VPSP verticies
+        p_b_vpsp[2] = 0 # z-coordinate is irrelevant
 
+        return p_b_vpsp
 
     def stepOnce(self, robot, command = None):
         """
@@ -212,10 +243,19 @@ class MasterController:
             new_foot_locations_wrt_body, contact_pattern, foot_phase_proportions_completed = (
                 self.calculateFootLocationsForNextGaitStep(robot = robot, command = command, gait_controller = self.trot_controller)
             )
-            vpsp_body_location = calculateVPSPBodyLocation(new_foot_locations_wrt_body, contact_pattern, foot_phase_proportions_completed)
-            # TODO: Use vpsp_body_location to change foot position targets
             # Update robot contact pattern
             robot.contact_pattern = contact_pattern
+
+            if (self.use_vpsp):
+                vpsp_body_location = self.calculateVPSPBodyLocation(new_foot_locations_wrt_body, contact_pattern, foot_phase_proportions_completed)
+                # Update robot p_vpsp
+                robot.p_vpsp = vpsp_body_location
+                # Apply VPSP result to new_foot_locations_wrt_body
+                # Negative foot movement --> positive body movement
+                new_foot_locations_wrt_body -= np.block(
+                    [vpsp_body_location.reshape(3, 1), vpsp_body_location.reshape(3, 1), vpsp_body_location.reshape(3, 1), vpsp_body_location.reshape(3, 1)]
+                )
+
             # Track foot trajectory without body rpy
             robot.updateFootLocationsAssumingNoBodyRPY(new_foot_locations_wrt_body)
             # Desired body orientation matrix
@@ -241,6 +281,5 @@ class MasterController:
             robot.body_pitch = command.body_pitch
             robot.body_yaw = command.body_yaw
         
-        
-
         robot.ticks += 1
+

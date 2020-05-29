@@ -19,8 +19,8 @@ class GaitConfig:
 
         if (self.gait == Gait.TROT):
             ### TROT PARAMS ###
-            self._gait_stance_duration = 0.08 # In seconds; Trot stance is when all 4 feet are in stance
-            self._gait_swing_duration = 0.05 # In seconds; Trot swing is when 2 feet are in swing, 2 feet are in stance
+            self._gait_stance_duration = 0.5 # In seconds; Trot stance is when all 4 feet are in stance
+            self._gait_swing_duration = 0.3 # In seconds; Trot swing is when 2 feet are in swing, 2 feet are in stance
             self.contact_schedule = (
                 np.array(
                     [[1, 1, 1, 0],
