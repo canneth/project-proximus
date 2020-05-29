@@ -1,6 +1,8 @@
 
 import sim
 
+from GlobalConstants import FootTrajectory
+
 from Leg import Leg
 from Robot import Robot
 from Robot import Mode
@@ -300,7 +302,7 @@ if __name__ == "__main__":
     connection_successful = False
     print("=== Programme START ===")
     sim.simxFinish(-1) # just in case, close all opened connections
-    client_id = sim.simxStart("127.0.0.1",19999,True,True,5000,5) # Connect to CoppeliaSim
+    client_id = sim.simxStart("127.0.0.1", 19999, True, True, 5000, 5) # Connect to CoppeliaSim
     # Connection ID of 19997 connects to the simulator without having the simulation running
     if client_id!=-1:
         print ("Connected to remote API server")
@@ -317,6 +319,7 @@ if __name__ == "__main__":
         # Master Controller
         master_controller = MasterController(
             config = config,
+            trajectory_shape = FootTrajectory.TRIANGULAR,
             use_capture_point = False,
             use_vpsp = False
         )
@@ -364,7 +367,6 @@ if __name__ == "__main__":
             ]
         )
         # x should be (18, 1)
-        x_init_p_b = np.array
         x_init = np.block(
             [
                 [np.array([0, 0, robot.stance_height]).reshape(3, 1)], # p_b
@@ -456,8 +458,8 @@ if __name__ == "__main__":
             elif (time_since_start < end_time):
                 command.stance_height = 0.2
                 command.mode = Mode.TROT
-                command.body_velocity = [0, 0, 0]
-                command.swing_height = 0.15
+                command.body_velocity = [0.1, 0, 0]
+                command.swing_height = 0.1
             else:
                 # End sim
                 break

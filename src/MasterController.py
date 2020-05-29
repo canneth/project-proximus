@@ -1,5 +1,7 @@
 
-from GaitConfig import Gait
+from GlobalConstants import Gait
+from GlobalConstants import FootTrajectory
+
 from GaitController import GaitController
 from LegStanceController import LegStanceController
 from LegSwingController import LegSwingController
@@ -15,6 +17,7 @@ class MasterController:
     def __init__(
         self,
         config,
+        trajectory_shape = FootTrajectory.TRIANGULAR, # 0: semi-circular; 1: triangular
         use_capture_point = False,
         use_vpsp = False
     ):
@@ -63,7 +66,7 @@ class MasterController:
                         command = command,
                         leg_index = leg_index,
                         swing_proportion_completed = leg_swing_proportion_completed,
-                        trajectory_shape = 1, # 0 = semi-circular, 1 = triangular
+                        trajectory_shape = FootTrajectory.TRIANGULAR, # 0 = semi-circular, 1 = triangular
                         use_capture_point = self.use_capture_point
                     )
                 )

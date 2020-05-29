@@ -1,5 +1,7 @@
 
 
+from GlobalConstants import FootTrajectory
+
 import numpy as np
 from numpy import pi as PI
 from transforms3d.euler import euler2mat
@@ -70,7 +72,15 @@ class LegSwingController:
         capture_point = np.sqrt(nominal_gait_height/gravitational_constant)*(current_velocity - desired_velocity)
         return capture_point
 
-    def calculateNewFootLocation(self, robot, command, leg_index, swing_proportion_completed, trajectory_shape = 0, use_capture_point = False):
+    def calculateNewFootLocation(
+        self,
+        robot,
+        command,
+        leg_index,
+        swing_proportion_completed,
+        trajectory_shape = FootTrajectory.TRIANGULAR,
+        use_capture_point = False
+    ):
         """
         DESCRIPTION:
         Calculates and returns the new foot position (wrt body) after a single tick.
@@ -94,9 +104,10 @@ class LegSwingController:
         time_to_touchdown = self.gait_config.config.dt * self.gait_config.leg_swing_duration_in_ticks * (1.0 - swing_proportion_completed)
         foot_delta_p = (touchdown_location - current_foot_location_assuming_no_body_rpy)/(time_to_touchdown / self.gait_config.config.dt)
         foot_delta_p[2] = 0
-        if (trajectory_shape == 0):
+        z_from_ground = None
+        if (trajectory_shape == FootTrajectory.TRIANGULAR):
             z_from_ground = self.gait_config.swing_height*np.sin(swing_proportion_completed*PI)
-        elif (trajectory_shape == 1):
+        elif (trajectory_shape == FootTrajectory.SEMICIRCULAR):
             if (swing_proportion_completed <= 0.5):
                 z_from_ground = self.gait_config.swing_height*swing_proportion_completed
             else:
@@ -104,3 +115,4 @@ class LegSwingController:
         new_foot_location = current_foot_location_assuming_no_body_rpy + foot_delta_p
         new_foot_location[2] = -command.stance_height + z_from_ground
         return new_foot_location
+
