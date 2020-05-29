@@ -320,7 +320,7 @@ if __name__ == "__main__":
         robot = Robot(
             client_id,
             stance_polygon_length = 0.4,
-            stance_polygon_width = 0.12,
+            stance_polygon_width = 0.18,
             stance_height = 0.225,
             swing_height = 0.08
         )
@@ -431,10 +431,8 @@ if __name__ == "__main__":
         last_time = time.time()
         start_time = time.time()
 
-        initialisation_time = 2.0
-        time_section_1 = 10.0
-        time_section_2 = 20.0
-        end_time = 30.0
+        initialisation_time = 1.0
+        end_time = 20.0
 
         ### LOOP ###
         while True:
@@ -446,12 +444,11 @@ if __name__ == "__main__":
 
             time_since_start = current_time - start_time
             if (time_since_start < initialisation_time):
-                # Initialisation time for KF to acquire and stabilise
+                # Initialisation time for KF and simulation to stabilise
                 command.stance_height = 0.2
                 command.mode = Mode.REST
                 command.body_velocity = [0, 0, 0]
             elif (time_since_start < end_time):
-                # Trot on the spot
                 command.stance_height = 0.2
                 command.mode = Mode.TROT
                 command.body_velocity = [0.3, 0, 0]
@@ -500,13 +497,14 @@ if __name__ == "__main__":
             kalman_filter.predict(u = np.array([1]), B = B)
             kalman_filter.update(z = z)
             # Update robot's velocity attribute with KF estimate
+            velocity_correction_coeff = 1 # 0.5 seems closer to true speed but it still doesn't render body velocity well enough to calculate a good capture point
             robot.body_velocity = np.array(
                 [
                     float(kalman_filter.x.reshape(18)[3]),
                     float(kalman_filter.x.reshape(18)[4]),
                     float(kalman_filter.x.reshape(18)[5])
                 ]
-            )
+            )*velocity_correction_coeff
 
             ### Collecting and formatting data for collection ###
             # Getting true values

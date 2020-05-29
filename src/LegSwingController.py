@@ -70,7 +70,6 @@ class LegSwingController:
         capture_point = np.sqrt(nominal_gait_height/gravitational_constant)*(current_velocity - desired_velocity)
         return capture_point
 
-
     def calculateNewFootLocation(self, robot, command, leg_index, swing_proportion_completed):
         """
         DESCRIPTION:
