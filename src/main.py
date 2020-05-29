@@ -22,6 +22,8 @@ from transforms3d.quaternions import quat2mat
 from filterpy.kalman import KalmanFilter
 from filterpy.common import Q_discrete_white_noise
 
+from pathlib import Path
+
 import time
 
 def ik_check(client_id, robot):
@@ -321,13 +323,13 @@ if __name__ == "__main__":
             config = config,
             trajectory_shape = FootTrajectory.TRIANGULAR,
             use_capture_point = False,
-            use_vpsp = False
+            use_vpsp = True
         )
         # Robot
         robot = Robot(
-            client_id,
+            client_id = client_id,
             stance_polygon_length = 0.4,
-            stance_polygon_width = 0.18,
+            stance_polygon_width = 0.15,
             stance_height = 0.225,
             swing_height = 0.08
         )
@@ -396,7 +398,7 @@ if __name__ == "__main__":
         kalman_filter.P = P_init
 
         # Data-logging stuff
-        data_field_list = (
+        data_field_list_kf = (
             [
                 "t",
                 "contact_pattern_index",
@@ -429,8 +431,32 @@ if __name__ == "__main__":
                 "p_vpsp_x", "p_vpsp_y", "p_vpsp_z"
             ]
         )
-        data_logger = DataLogger(
-            data_fields = data_field_list
+        data_logger_kf = DataLogger(
+            data_fields = data_field_list_kf,
+            save_file_path = Path(".") / "data" / "kf_data.csv"
+        )
+        data_field_list_vpsp = (
+            [
+                "t",
+                "p_b_vpsp_x", "p_b_vpsp_y",
+                "FL_cw_vp_x", "FL_cw_vp_y",
+                "FR_cw_vp_x", "FR_cw_vp_y",
+                "BL_cw_vp_x", "BL_cw_vp_y",
+                "BR_cw_vp_x", "BR_cw_vp_y",
+                "FL_ccw_vp_x", "FL_ccw_vp_y",
+                "FR_ccw_vp_x", "FR_ccw_vp_y",
+                "BL_ccw_vp_x", "BL_ccw_vp_y",
+                "BR_ccw_vp_x", "BR_ccw_vp_y",
+                "FL_vt_x", "FL_vt_y",
+                "FR_vt_x", "FR_vt_y",
+                "BL_vt_x", "BL_vt_y",
+                "BR_vt_x", "BR_vt_y"
+
+            ]
+        )
+        data_logger_vpsp = DataLogger(
+            data_fields = data_field_list_vpsp,
+            save_file_path = Path(".") / "data" / "vpsp_data.csv"
         )
 
         command = Command()
@@ -439,7 +465,7 @@ if __name__ == "__main__":
         start_time = time.time()
 
         initialisation_time = 1.0
-        end_time = 20.0
+        end_time = 10.0
 
         ### LOOP ###
         while True:
@@ -458,7 +484,7 @@ if __name__ == "__main__":
             elif (time_since_start < end_time):
                 command.stance_height = 0.2
                 command.mode = Mode.TROT
-                command.body_velocity = [0.1, 0, 0]
+                command.body_velocity = [0.2, 0, 0]
                 command.swing_height = 0.1
             else:
                 # End sim
@@ -595,94 +621,126 @@ if __name__ == "__main__":
             P_p_4y_std = float(np.sqrt(new_P[16, 16]))
             P_p_4z_std = float(np.sqrt(new_P[17, 17]))
 
-            data_dict = {key: 0 for key in data_field_list}
-            data_dict["t"] = t
-            data_dict["contact_pattern_index"] = contact_pattern_index
-            data_dict["p_x_true"] = p_0b[0]
-            data_dict["p_y_true"] = p_0b[1]
-            data_dict["p_z_true"] = p_0b[2]
-            data_dict["v_x_true"] = v_0b[0]
-            data_dict["v_y_true"] = v_0b[1]
-            data_dict["v_z_true"] = v_0b[2]
-            data_dict["p_1x_true"] = p_1_abs[0]
-            data_dict["p_1y_true"] = p_1_abs[1]
-            data_dict["p_1z_true"] = p_1_abs[2]
-            data_dict["p_2x_true"] = p_2_abs[0]
-            data_dict["p_2y_true"] = p_2_abs[1]
-            data_dict["p_2z_true"] = p_2_abs[2]
-            data_dict["p_3x_true"] = p_3_abs[0]
-            data_dict["p_3y_true"] = p_3_abs[1]
-            data_dict["p_3z_true"] = p_3_abs[2]
-            data_dict["p_4x_true"] = p_4_abs[0]
-            data_dict["p_4y_true"] = p_4_abs[1]
-            data_dict["p_4z_true"] = p_4_abs[2]
-            data_dict["p_x_est"] = p_x_est
-            data_dict["p_y_est"] = p_y_est
-            data_dict["p_z_est"] = p_z_est
-            data_dict["v_x_est"] = v_x_est
-            data_dict["v_y_est"] = v_y_est
-            data_dict["v_z_est"] = v_z_est
-            data_dict["p_1x_est"] = p_1x_est
-            data_dict["p_1y_est"] = p_1y_est
-            data_dict["p_1z_est"] = p_1z_est
-            data_dict["p_2x_est"] = p_2x_est
-            data_dict["p_2y_est"] = p_2y_est
-            data_dict["p_2z_est"] = p_2z_est
-            data_dict["p_3x_est"] = p_3x_est
-            data_dict["p_3y_est"] = p_3y_est
-            data_dict["p_3z_est"] = p_3z_est
-            data_dict["p_4x_est"] = p_4x_est
-            data_dict["p_4y_est"] = p_4y_est
-            data_dict["p_4z_est"] = p_4z_est
-            data_dict["y_p_1x"] = y_p_1x
-            data_dict["y_p_1y"] = y_p_1y
-            data_dict["y_p_1z"] = y_p_1z
-            data_dict["y_p_2x"] = y_p_2x
-            data_dict["y_p_2y"] = y_p_2y
-            data_dict["y_p_2z"] = y_p_2z
-            data_dict["y_p_3x"] = y_p_3x
-            data_dict["y_p_3y"] = y_p_3y
-            data_dict["y_p_3z"] = y_p_3z
-            data_dict["y_p_4x"] = y_p_4x
-            data_dict["y_p_4y"] = y_p_4y
-            data_dict["y_p_4z"] = y_p_4z
-            data_dict["y_v_1x"] = y_v_1x
-            data_dict["y_v_1y"] = y_v_1y
-            data_dict["y_v_1z"] = y_v_1z
-            data_dict["y_v_2x"] = y_v_2x
-            data_dict["y_v_2y"] = y_v_2y
-            data_dict["y_v_2z"] = y_v_2z
-            data_dict["y_v_3x"] = y_v_3x
-            data_dict["y_v_3y"] = y_v_3y
-            data_dict["y_v_3z"] = y_v_3z
-            data_dict["y_v_4x"] = y_v_4x
-            data_dict["y_v_4y"] = y_v_4y
-            data_dict["y_v_4z"] = y_v_4z
-            data_dict["P_p_bx_std"] = P_p_bx_std
-            data_dict["P_p_by_std"] = P_p_by_std
-            data_dict["P_p_bz_std"] = P_p_bz_std
-            data_dict["P_v_bx_std"] = P_v_bx_std
-            data_dict["P_v_by_std"] = P_v_by_std
-            data_dict["P_v_bz_std"] = P_v_bz_std
-            data_dict["P_p_1x_std"] = P_p_1x_std
-            data_dict["P_p_1y_std"] = P_p_1y_std
-            data_dict["P_p_1z_std"] = P_p_1z_std
-            data_dict["P_p_2x_std"] = P_p_2x_std
-            data_dict["P_p_2y_std"] = P_p_2y_std
-            data_dict["P_p_2z_std"] = P_p_2z_std
-            data_dict["P_p_3x_std"] = P_p_3x_std
-            data_dict["P_p_3y_std"] = P_p_3y_std
-            data_dict["P_p_3z_std"] = P_p_3z_std
-            data_dict["P_p_4x_std"] = P_p_4x_std
-            data_dict["P_p_4y_std"] = P_p_4y_std
-            data_dict["P_p_4z_std"] = P_p_4z_std
-            data_dict["p_vpsp_x"] = robot.p_vpsp[0]
-            data_dict["p_vpsp_y"] = robot.p_vpsp[1]
-            data_dict["p_vpsp_z"] = robot.p_vpsp[2]
+            ### Building data_dicts ###
+            # For Kalman filter visualisation #
+            data_logger_kf.data_dict = {key: 0 for key in data_field_list_kf}
+            data_logger_kf.data_dict["t"] = t
+            data_logger_kf.data_dict["contact_pattern_index"] = contact_pattern_index
+            data_logger_kf.data_dict["p_x_true"] = p_0b[0]
+            data_logger_kf.data_dict["p_y_true"] = p_0b[1]
+            data_logger_kf.data_dict["p_z_true"] = p_0b[2]
+            data_logger_kf.data_dict["v_x_true"] = v_0b[0]
+            data_logger_kf.data_dict["v_y_true"] = v_0b[1]
+            data_logger_kf.data_dict["v_z_true"] = v_0b[2]
+            data_logger_kf.data_dict["p_1x_true"] = p_1_abs[0]
+            data_logger_kf.data_dict["p_1y_true"] = p_1_abs[1]
+            data_logger_kf.data_dict["p_1z_true"] = p_1_abs[2]
+            data_logger_kf.data_dict["p_2x_true"] = p_2_abs[0]
+            data_logger_kf.data_dict["p_2y_true"] = p_2_abs[1]
+            data_logger_kf.data_dict["p_2z_true"] = p_2_abs[2]
+            data_logger_kf.data_dict["p_3x_true"] = p_3_abs[0]
+            data_logger_kf.data_dict["p_3y_true"] = p_3_abs[1]
+            data_logger_kf.data_dict["p_3z_true"] = p_3_abs[2]
+            data_logger_kf.data_dict["p_4x_true"] = p_4_abs[0]
+            data_logger_kf.data_dict["p_4y_true"] = p_4_abs[1]
+            data_logger_kf.data_dict["p_4z_true"] = p_4_abs[2]
+            data_logger_kf.data_dict["p_x_est"] = p_x_est
+            data_logger_kf.data_dict["p_y_est"] = p_y_est
+            data_logger_kf.data_dict["p_z_est"] = p_z_est
+            data_logger_kf.data_dict["v_x_est"] = v_x_est
+            data_logger_kf.data_dict["v_y_est"] = v_y_est
+            data_logger_kf.data_dict["v_z_est"] = v_z_est
+            data_logger_kf.data_dict["p_1x_est"] = p_1x_est
+            data_logger_kf.data_dict["p_1y_est"] = p_1y_est
+            data_logger_kf.data_dict["p_1z_est"] = p_1z_est
+            data_logger_kf.data_dict["p_2x_est"] = p_2x_est
+            data_logger_kf.data_dict["p_2y_est"] = p_2y_est
+            data_logger_kf.data_dict["p_2z_est"] = p_2z_est
+            data_logger_kf.data_dict["p_3x_est"] = p_3x_est
+            data_logger_kf.data_dict["p_3y_est"] = p_3y_est
+            data_logger_kf.data_dict["p_3z_est"] = p_3z_est
+            data_logger_kf.data_dict["p_4x_est"] = p_4x_est
+            data_logger_kf.data_dict["p_4y_est"] = p_4y_est
+            data_logger_kf.data_dict["p_4z_est"] = p_4z_est
+            data_logger_kf.data_dict["y_p_1x"] = y_p_1x
+            data_logger_kf.data_dict["y_p_1y"] = y_p_1y
+            data_logger_kf.data_dict["y_p_1z"] = y_p_1z
+            data_logger_kf.data_dict["y_p_2x"] = y_p_2x
+            data_logger_kf.data_dict["y_p_2y"] = y_p_2y
+            data_logger_kf.data_dict["y_p_2z"] = y_p_2z
+            data_logger_kf.data_dict["y_p_3x"] = y_p_3x
+            data_logger_kf.data_dict["y_p_3y"] = y_p_3y
+            data_logger_kf.data_dict["y_p_3z"] = y_p_3z
+            data_logger_kf.data_dict["y_p_4x"] = y_p_4x
+            data_logger_kf.data_dict["y_p_4y"] = y_p_4y
+            data_logger_kf.data_dict["y_p_4z"] = y_p_4z
+            data_logger_kf.data_dict["y_v_1x"] = y_v_1x
+            data_logger_kf.data_dict["y_v_1y"] = y_v_1y
+            data_logger_kf.data_dict["y_v_1z"] = y_v_1z
+            data_logger_kf.data_dict["y_v_2x"] = y_v_2x
+            data_logger_kf.data_dict["y_v_2y"] = y_v_2y
+            data_logger_kf.data_dict["y_v_2z"] = y_v_2z
+            data_logger_kf.data_dict["y_v_3x"] = y_v_3x
+            data_logger_kf.data_dict["y_v_3y"] = y_v_3y
+            data_logger_kf.data_dict["y_v_3z"] = y_v_3z
+            data_logger_kf.data_dict["y_v_4x"] = y_v_4x
+            data_logger_kf.data_dict["y_v_4y"] = y_v_4y
+            data_logger_kf.data_dict["y_v_4z"] = y_v_4z
+            data_logger_kf.data_dict["P_p_bx_std"] = P_p_bx_std
+            data_logger_kf.data_dict["P_p_by_std"] = P_p_by_std
+            data_logger_kf.data_dict["P_p_bz_std"] = P_p_bz_std
+            data_logger_kf.data_dict["P_v_bx_std"] = P_v_bx_std
+            data_logger_kf.data_dict["P_v_by_std"] = P_v_by_std
+            data_logger_kf.data_dict["P_v_bz_std"] = P_v_bz_std
+            data_logger_kf.data_dict["P_p_1x_std"] = P_p_1x_std
+            data_logger_kf.data_dict["P_p_1y_std"] = P_p_1y_std
+            data_logger_kf.data_dict["P_p_1z_std"] = P_p_1z_std
+            data_logger_kf.data_dict["P_p_2x_std"] = P_p_2x_std
+            data_logger_kf.data_dict["P_p_2y_std"] = P_p_2y_std
+            data_logger_kf.data_dict["P_p_2z_std"] = P_p_2z_std
+            data_logger_kf.data_dict["P_p_3x_std"] = P_p_3x_std
+            data_logger_kf.data_dict["P_p_3y_std"] = P_p_3y_std
+            data_logger_kf.data_dict["P_p_3z_std"] = P_p_3z_std
+            data_logger_kf.data_dict["P_p_4x_std"] = P_p_4x_std
+            data_logger_kf.data_dict["P_p_4y_std"] = P_p_4y_std
+            data_logger_kf.data_dict["P_p_4z_std"] = P_p_4z_std
+            data_logger_kf.data_dict["p_vpsp_x"] = robot.p_b_vpsp[0]
+            data_logger_kf.data_dict["p_vpsp_y"] = robot.p_b_vpsp[1]
+            data_logger_kf.data_dict["p_vpsp_z"] = robot.p_b_vpsp[2]
+            
+            # For VPSP visualising #
+            data_logger_vpsp.data_dict = {key: 0 for key in data_field_list_vpsp}
+            data_logger_vpsp.data_dict["t"] = t
+            data_logger_vpsp.data_dict["p_b_vpsp_x"] = robot.p_b_vpsp.reshape(3)[0]
+            data_logger_vpsp.data_dict["p_b_vpsp_y"] = robot.p_b_vpsp.reshape(3)[1]
+            data_logger_vpsp.data_dict["FL_cw_vp_x"] = robot.virtual_points[0, 0, 0]
+            data_logger_vpsp.data_dict["FL_cw_vp_y"] = robot.virtual_points[0, 0, 1]
+            data_logger_vpsp.data_dict["FR_cw_vp_x"] = robot.virtual_points[1, 0, 0]
+            data_logger_vpsp.data_dict["FR_cw_vp_y"] = robot.virtual_points[1, 0, 1]
+            data_logger_vpsp.data_dict["BL_cw_vp_x"] = robot.virtual_points[2, 0, 0]
+            data_logger_vpsp.data_dict["BL_cw_vp_y"] = robot.virtual_points[2, 0, 1]
+            data_logger_vpsp.data_dict["BR_cw_vp_x"] = robot.virtual_points[3, 0, 0]
+            data_logger_vpsp.data_dict["BR_cw_vp_y"] = robot.virtual_points[3, 0, 1]
+            data_logger_vpsp.data_dict["FL_ccw_vp_x"] = robot.virtual_points[0, 1, 0]
+            data_logger_vpsp.data_dict["FL_ccw_vp_y"] = robot.virtual_points[0, 1, 1]
+            data_logger_vpsp.data_dict["FR_ccw_vp_x"] = robot.virtual_points[1, 1, 0]
+            data_logger_vpsp.data_dict["FR_ccw_vp_y"] = robot.virtual_points[1, 1, 1]
+            data_logger_vpsp.data_dict["BL_ccw_vp_x"] = robot.virtual_points[2, 1, 0]
+            data_logger_vpsp.data_dict["BL_ccw_vp_y"] = robot.virtual_points[2, 1, 1]
+            data_logger_vpsp.data_dict["BR_ccw_vp_x"] = robot.virtual_points[3, 1, 0]
+            data_logger_vpsp.data_dict["BR_ccw_vp_y"] = robot.virtual_points[3, 1, 1]
+            data_logger_vpsp.data_dict["FL_vt_x"] = robot.vpsp_vertices[0, 0]
+            data_logger_vpsp.data_dict["FL_vt_y"] = robot.vpsp_vertices[1, 0]
+            data_logger_vpsp.data_dict["FR_vt_x"] = robot.vpsp_vertices[0, 1]
+            data_logger_vpsp.data_dict["FR_vt_y"] = robot.vpsp_vertices[1, 1]
+            data_logger_vpsp.data_dict["BL_vt_x"] = robot.vpsp_vertices[0, 2]
+            data_logger_vpsp.data_dict["BL_vt_y"] = robot.vpsp_vertices[1, 2]
+            data_logger_vpsp.data_dict["BR_vt_x"] = robot.vpsp_vertices[0, 3]
+            data_logger_vpsp.data_dict["BR_vt_y"] = robot.vpsp_vertices[1, 3]
 
-            data_logger.writeData(
-                data_dict
-            )
+            # Write data #
+            data_logger_kf.writeData()
+            data_logger_vpsp.writeData()
 
         ### CLOSE CONNECTION TO SIM ###
         sim.simxGetPingTime(client_id)

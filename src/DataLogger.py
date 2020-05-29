@@ -12,27 +12,21 @@ class DataLogger:
     ):
         self.save_file_path = save_file_path
         self.data_fields = data_fields
+        self.data_dict = {key: 0 for key in self.data_fields}
 
         with open(self.save_file_path, 'w') as f:
             header_line = re.sub("\[|\'|\]", "", "{}".format(self.data_fields)) + "\n"
             f.write(header_line)
 
-    def writeData(self, dict_of_data):
+    def writeData(self):
         with open(self.save_file_path, 'a') as f:
             line = ""
-            for key in list(dict_of_data.keys()):
+            for key in list(self.data_dict.keys()):
                 if key == "t":
-                    line = line + re.sub("\[|\'|\]", "", "{:.3f}".format(dict_of_data[key])) + ","
-                elif (type(dict_of_data[key]) == float):
-                    line = line + re.sub("\[|\'|\]", "", "{:.6f}".format(dict_of_data[key])) + ","
+                    line = line + re.sub("\[|\'|\]", "", "{:.3f}".format(self.data_dict[key])) + ","
+                elif (type(self.data_dict[key]) == float):
+                    line = line + re.sub("\[|\'|\]", "", "{:.6f}".format(self.data_dict[key])) + ","
                 else:
-                    line = line + re.sub("\[|\'|\]", "", "{}".format(dict_of_data[key])) + ","
+                    line = line + re.sub("\[|\'|\]", "", "{}".format(self.data_dict[key])) + ","
             line = line.rstrip(", ") + "\n"
             f.write(line)
-
-if __name__ == "__main__":
-    data_logger = DataLogger(data_fields = ["x", "y", "z"])
-    data_logger.writeData({"x": 1, "y": 2, "z": 3})
-    data_logger.writeData({"x": 1, "y": 2, "z": 3})
-    data_logger.writeData({"x": 1, "y": 2, "z": 3})
-    data_logger.writeData({"x": 1, "y": 2, "z": 3})

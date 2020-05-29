@@ -125,7 +125,9 @@ class Robot:
         self.ticks = 0
         self.mode = Mode.REST
 
-        self.p_vpsp = np.zeros((3))
+        self.p_b_vpsp = np.zeros((3))
+        self.virtual_points = np.zeros((4, 2, 3))
+        self.vpsp_vertices = np.zeros((3, 4))
 
         self.foot_locations_wrt_body_at_rest = np.concatenate( \
             ( \
