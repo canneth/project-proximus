@@ -14,5 +14,6 @@ class Command:
         self.body_pitch = 0 # In radians
         self.body_yaw = 0 # In radians
         self.stance_height = 0.225
+        self.swing_height = 0.0
 
         self.mode = Mode.REST

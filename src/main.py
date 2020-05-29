@@ -131,7 +131,7 @@ def generateStateCovarianceMatrix(p_b_std, v_b_std, p_1_std, p_2_std, p_3_std, p
     else:
         P_new = np.copy(P_prev)
         # Modify elements based on contact_pattern_index
-        inf = 10**100
+        inf = 9999
         # Iterate in blocks of size (3, 3)
         n = 3
         for i in range(contact_pattern.reshape(4).shape[0]):
@@ -174,7 +174,7 @@ def generateProcessCovarianceMatrix(v_b_std, p_1_std, p_2_std, p_3_std, p_4_std,
     Q_body = (v_b_std**2)*Q_body
     p_i_stds = np.array([p_1_std, p_2_std, p_3_std, p_4_std]).reshape(4)
     mask_from_contact_pattern = np.array(contact_pattern).reshape(4)
-    inf = 10**100
+    inf = 9999
     p_i_stds[mask_from_contact_pattern == 0] = inf # For feet in swing, send uncertainty into the sky
     Q_feet = np.block( # Q_feet is (12, 12)
         [
@@ -269,7 +269,7 @@ def generateMeasurementCovarianceMatrix(z_p_1_std, z_p_2_std, z_p_3_std, z_p_4_s
     z_p_i_stds = np.array([z_p_1_std, z_p_2_std, z_p_3_std, z_p_4_std]).reshape(4)
     z_v_i_stds = np.array([z_v_1_std, z_v_2_std, z_v_3_std, z_v_4_std]).reshape(4)
     mask_from_contact_pattern = np.array(contact_pattern).reshape(4)
-    inf = 10**100
+    inf = 9999
     z_p_i_stds[mask_from_contact_pattern == 0] = inf # For feet in swing, send uncertainty into the sky
     z_v_i_stds[mask_from_contact_pattern == 0] = inf # For feet in swing, send uncertainty into the sky
     R = np.block(
@@ -320,7 +320,7 @@ if __name__ == "__main__":
         robot = Robot(
             client_id,
             stance_polygon_length = 0.4,
-            stance_polygon_width = 0.18,
+            stance_polygon_width = 0.12,
             stance_height = 0.225,
             swing_height = 0.08
         )
@@ -373,12 +373,12 @@ if __name__ == "__main__":
         ).reshape(18)
         # P should be (18, 18)
         P_init = generateStateCovarianceMatrix(
-            p_b_std = 0.01, # Very certain about initial body position
-            v_b_std = 0.01, # Very certain about initial body velocity
-            p_1_std = 0.01, # Very certain about initial foot position
-            p_2_std = 0.01, # Very certain about initial foot position
-            p_3_std = 0.01, # Very certain about initial foot position
-            p_4_std = 0.01 # Very certain about initial foot position
+            p_b_std = 0.001, # Very certain about initial body position
+            v_b_std = 0.001, # Very certain about initial body velocity
+            p_1_std = 0.001, # Very certain about initial foot position
+            p_2_std = 0.001, # Very certain about initial foot position
+            p_3_std = 0.001, # Very certain about initial foot position
+            p_4_std = 0.001 # Very certain about initial foot position
         )
 
         # Create Kalman Filter
@@ -413,7 +413,13 @@ if __name__ == "__main__":
                 "y_v_1x", "y_v_1y", "y_v_1z",
                 "y_v_2x", "y_v_2y", "y_v_2z",
                 "y_v_3x", "y_v_3y", "y_v_3z",
-                "y_v_4x", "y_v_4y", "y_v_4z"
+                "y_v_4x", "y_v_4y", "y_v_4z",
+                "P_p_bx_std", "P_p_by_std", "P_p_bz_std",
+                "P_v_bx_std", "P_v_by_std", "P_v_bz_std",
+                "P_p_1x_std", "P_p_1y_std", "P_p_1z_std",
+                "P_p_2x_std", "P_p_2y_std", "P_p_2z_std",
+                "P_p_3x_std", "P_p_3y_std", "P_p_3z_std",
+                "P_p_4x_std", "P_p_4y_std", "P_p_4z_std"
             ]
         )
         data_logger = DataLogger(
@@ -425,7 +431,10 @@ if __name__ == "__main__":
         last_time = time.time()
         start_time = time.time()
 
-        initialisation_time = 1.0
+        initialisation_time = 2.0
+        time_section_1 = 10.0
+        time_section_2 = 20.0
+        end_time = 30.0
 
         ### LOOP ###
         while True:
@@ -435,39 +444,46 @@ if __name__ == "__main__":
                 continue
             last_time = time.time()
 
-            if (current_time - start_time < initialisation_time):
+            time_since_start = current_time - start_time
+            if (time_since_start < initialisation_time):
                 # Initialisation time for KF to acquire and stabilise
                 command.stance_height = 0.2
                 command.mode = Mode.REST
                 command.body_velocity = [0, 0, 0]
-            else:
+            elif (time_since_start < end_time):
+                # Trot on the spot
                 command.stance_height = 0.2
                 command.mode = Mode.TROT
                 command.body_velocity = [0.3, 0, 0]
+                command.swing_height = 0.15
+            else:
+                # End sim
+                break
+
 
             master_controller.stepOnce(robot, command)
             # Generate Q according to contact_pattern
             # Q should be (18, 18)
             Q = generateProcessCovarianceMatrix(
-                v_b_std = 0.1,
-                p_1_std = 0.08,
-                p_2_std = 0.08,
-                p_3_std = 0.08,
-                p_4_std = 0.08,
+                v_b_std = 0.5, # Process noise is high for velocity because model does not account for disturbances due to foot movement
+                p_1_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
+                p_2_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
+                p_3_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
+                p_4_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
                 dt = dt,
                 contact_pattern = robot.contact_pattern
             )
             # Generate R according to contact_pattern
             # R should be (24, 24)
             R = generateMeasurementCovarianceMatrix(
-                z_p_1_std = 0.02, # Much trust in measurements
-                z_p_2_std = 0.02,
-                z_p_3_std = 0.02,
-                z_p_4_std = 0.02,
-                z_v_1_std = 0.02,
-                z_v_2_std = 0.02,
-                z_v_3_std = 0.02,
-                z_v_4_std = 0.02,
+                z_p_1_std = 0.005, # Uncertainty in measured relative foot positions is low because servos move to commanded position very accurately
+                z_p_2_std = 0.005, # Uncertainty in measured relative foot positions is low because servos move to commanded position very accurately
+                z_p_3_std = 0.005, # Uncertainty in measured relative foot positions is low because servos move to commanded position very accurately
+                z_p_4_std = 0.005, # Uncertainty in measured relative foot positions is low because servos move to commanded position very accurately
+                z_v_1_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
+                z_v_2_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
+                z_v_3_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
+                z_v_4_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
                 z_b_height_std = 0.1,
                 contact_pattern = robot.contact_pattern
             )
@@ -483,6 +499,14 @@ if __name__ == "__main__":
             # Run Kalman filter
             kalman_filter.predict(u = np.array([1]), B = B)
             kalman_filter.update(z = z)
+            # Update robot's velocity attribute with KF estimate
+            robot.body_velocity = np.array(
+                [
+                    float(kalman_filter.x.reshape(18)[3]),
+                    float(kalman_filter.x.reshape(18)[4]),
+                    float(kalman_filter.x.reshape(18)[5])
+                ]
+            )
 
             ### Collecting and formatting data for collection ###
             # Getting true values
@@ -502,48 +526,69 @@ if __name__ == "__main__":
                 gait_schedule = master_controller.trot_controller.gait_config.contact_schedule
             )
             # Getting estimates from Kalman filter
-            p_x_est = float(kalman_filter.x.reshape(18)[0])
-            p_y_est = float(kalman_filter.x.reshape(18)[1])
-            p_z_est = float(kalman_filter.x.reshape(18)[2])
-            v_x_est = float(kalman_filter.x.reshape(18)[3])
-            v_y_est = float(kalman_filter.x.reshape(18)[4])
-            v_z_est = float(kalman_filter.x.reshape(18)[5])
-            p_1x_est = float(kalman_filter.x.reshape(18)[6])
-            p_1y_est = float(kalman_filter.x.reshape(18)[7])
-            p_1z_est = float(kalman_filter.x.reshape(18)[8])
-            p_2x_est = float(kalman_filter.x.reshape(18)[9])
-            p_2y_est = float(kalman_filter.x.reshape(18)[10])
-            p_2z_est = float(kalman_filter.x.reshape(18)[11])
-            p_3x_est = float(kalman_filter.x.reshape(18)[12])
-            p_3y_est = float(kalman_filter.x.reshape(18)[13])
-            p_3z_est = float(kalman_filter.x.reshape(18)[14])
-            p_4x_est = float(kalman_filter.x.reshape(18)[15])
-            p_4y_est = float(kalman_filter.x.reshape(18)[16])
-            p_4z_est = float(kalman_filter.x.reshape(18)[17])
-            y_p_1x = float(kalman_filter.y.reshape(25)[0])
-            y_p_1y = float(kalman_filter.y.reshape(25)[1])
-            y_p_1z = float(kalman_filter.y.reshape(25)[2])
-            y_p_2x = float(kalman_filter.y.reshape(25)[3])
-            y_p_2y = float(kalman_filter.y.reshape(25)[4])
-            y_p_2z = float(kalman_filter.y.reshape(25)[5])
-            y_p_3x = float(kalman_filter.y.reshape(25)[6])
-            y_p_3y = float(kalman_filter.y.reshape(25)[7])
-            y_p_3z = float(kalman_filter.y.reshape(25)[8])
-            y_p_4x = float(kalman_filter.y.reshape(25)[9])
-            y_p_4y = float(kalman_filter.y.reshape(25)[10])
-            y_p_4z = float(kalman_filter.y.reshape(25)[11])
-            y_v_1x = float(kalman_filter.y.reshape(25)[12])
-            y_v_1y = float(kalman_filter.y.reshape(25)[13])
-            y_v_1z = float(kalman_filter.y.reshape(25)[14])
-            y_v_2x = float(kalman_filter.y.reshape(25)[15])
-            y_v_2y = float(kalman_filter.y.reshape(25)[16])
-            y_v_2z = float(kalman_filter.y.reshape(25)[17])
-            y_v_3x = float(kalman_filter.y.reshape(25)[18])
-            y_v_3y = float(kalman_filter.y.reshape(25)[19])
-            y_v_3z = float(kalman_filter.y.reshape(25)[20])
-            y_v_4x = float(kalman_filter.y.reshape(25)[21])
-            y_v_4y = float(kalman_filter.y.reshape(25)[22])
-            y_v_4z = float(kalman_filter.y.reshape(25)[23])
+            new_x = kalman_filter.x.reshape(18)
+            new_P = kalman_filter.P
+            new_y = kalman_filter.y.reshape(25)
+            p_x_est = float(new_x.reshape(18)[0])
+            p_y_est = float(new_x.reshape(18)[1])
+            p_z_est = float(new_x.reshape(18)[2])
+            v_x_est = float(new_x.reshape(18)[3])
+            v_y_est = float(new_x.reshape(18)[4])
+            v_z_est = float(new_x.reshape(18)[5])
+            p_1x_est = float(new_x.reshape(18)[6])
+            p_1y_est = float(new_x.reshape(18)[7])
+            p_1z_est = float(new_x.reshape(18)[8])
+            p_2x_est = float(new_x.reshape(18)[9])
+            p_2y_est = float(new_x.reshape(18)[10])
+            p_2z_est = float(new_x.reshape(18)[11])
+            p_3x_est = float(new_x.reshape(18)[12])
+            p_3y_est = float(new_x.reshape(18)[13])
+            p_3z_est = float(new_x.reshape(18)[14])
+            p_4x_est = float(new_x.reshape(18)[15])
+            p_4y_est = float(new_x.reshape(18)[16])
+            p_4z_est = float(new_x.reshape(18)[17])
+            y_p_1x = float(new_y.reshape(25)[0])
+            y_p_1y = float(new_y.reshape(25)[1])
+            y_p_1z = float(new_y.reshape(25)[2])
+            y_p_2x = float(new_y.reshape(25)[3])
+            y_p_2y = float(new_y.reshape(25)[4])
+            y_p_2z = float(new_y.reshape(25)[5])
+            y_p_3x = float(new_y.reshape(25)[6])
+            y_p_3y = float(new_y.reshape(25)[7])
+            y_p_3z = float(new_y.reshape(25)[8])
+            y_p_4x = float(new_y.reshape(25)[9])
+            y_p_4y = float(new_y.reshape(25)[10])
+            y_p_4z = float(new_y.reshape(25)[11])
+            y_v_1x = float(new_y.reshape(25)[12])
+            y_v_1y = float(new_y.reshape(25)[13])
+            y_v_1z = float(new_y.reshape(25)[14])
+            y_v_2x = float(new_y.reshape(25)[15])
+            y_v_2y = float(new_y.reshape(25)[16])
+            y_v_2z = float(new_y.reshape(25)[17])
+            y_v_3x = float(new_y.reshape(25)[18])
+            y_v_3y = float(new_y.reshape(25)[19])
+            y_v_3z = float(new_y.reshape(25)[20])
+            y_v_4x = float(new_y.reshape(25)[21])
+            y_v_4y = float(new_y.reshape(25)[22])
+            y_v_4z = float(new_y.reshape(25)[23])
+            P_p_bx_std = float(np.sqrt(new_P[0, 0]))
+            P_p_by_std = float(np.sqrt(new_P[1, 2]))
+            P_p_bz_std = float(np.sqrt(new_P[2, 2]))
+            P_v_bx_std = float(np.sqrt(new_P[3, 3]))
+            P_v_by_std = float(np.sqrt(new_P[4, 4]))
+            P_v_bz_std = float(np.sqrt(new_P[5, 5]))
+            P_p_1x_std = float(np.sqrt(new_P[6, 6]))
+            P_p_1y_std = float(np.sqrt(new_P[7, 7]))
+            P_p_1z_std = float(np.sqrt(new_P[8, 8]))
+            P_p_2x_std = float(np.sqrt(new_P[9, 9]))
+            P_p_2y_std = float(np.sqrt(new_P[10, 10]))
+            P_p_2z_std = float(np.sqrt(new_P[11, 11]))
+            P_p_3x_std = float(np.sqrt(new_P[12, 12]))
+            P_p_3y_std = float(np.sqrt(new_P[13, 13]))
+            P_p_3z_std = float(np.sqrt(new_P[14, 14]))
+            P_p_4x_std = float(np.sqrt(new_P[15, 15]))
+            P_p_4y_std = float(np.sqrt(new_P[16, 16]))
+            P_p_4z_std = float(np.sqrt(new_P[17, 17]))
 
             data_dict = {key: 0 for key in data_field_list}
             data_dict["t"] = t
@@ -608,6 +653,24 @@ if __name__ == "__main__":
             data_dict["y_v_4x"] = y_v_4x
             data_dict["y_v_4y"] = y_v_4y
             data_dict["y_v_4z"] = y_v_4z
+            data_dict["P_p_bx_std"] = P_p_bx_std
+            data_dict["P_p_by_std"] = P_p_by_std
+            data_dict["P_p_bz_std"] = P_p_bz_std
+            data_dict["P_v_bx_std"] = P_v_bx_std
+            data_dict["P_v_by_std"] = P_v_by_std
+            data_dict["P_v_bz_std"] = P_v_bz_std
+            data_dict["P_p_1x_std"] = P_p_1x_std
+            data_dict["P_p_1y_std"] = P_p_1y_std
+            data_dict["P_p_1z_std"] = P_p_1z_std
+            data_dict["P_p_2x_std"] = P_p_2x_std
+            data_dict["P_p_2y_std"] = P_p_2y_std
+            data_dict["P_p_2z_std"] = P_p_2z_std
+            data_dict["P_p_3x_std"] = P_p_3x_std
+            data_dict["P_p_3y_std"] = P_p_3y_std
+            data_dict["P_p_3z_std"] = P_p_3z_std
+            data_dict["P_p_4x_std"] = P_p_4x_std
+            data_dict["P_p_4y_std"] = P_p_4y_std
+            data_dict["P_p_4z_std"] = P_p_4z_std
 
             data_logger.writeData(
                 data_dict

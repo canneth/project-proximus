@@ -28,6 +28,8 @@ class MasterController:
         + command: A Command object; it contains the input commands into the robot.
         + gait_controller: A GaitController object; the gait controller used to propagate the gait.
         """
+        # Update swing_height in gait_config from command
+        gait_controller.gait_config.swing_height = command.swing_height
         # Create leg controllers depending on gait_controller
         leg_stance_controller = LegStanceController(gait_config = gait_controller.gait_config)
         leg_swing_controller = LegSwingController(gait_config = gait_controller.gait_config)
@@ -51,6 +53,16 @@ class MasterController:
                 # Leg is in stance phase
                 # Calculate position of leg's foot at the next tick
                 new_foot_locations_wrt_body[:, leg_index] = leg_stance_controller.calculateNewFootLocation(robot, command, leg_index)
+        np.set_printoptions(precision = 3, suppress = True)
+        print("FL FOOT:: Phase: {} | xyz: {} | Raibert TD: {} | Capture point: {} | Commanded TD: {}".format(
+                contact_pattern[0],
+                robot.foot_locations_wrt_body_true[:, 0],
+                leg_swing_controller.calculateRaibertTouchdownLocation(robot = robot, command = command, leg_index = 0),
+                leg_swing_controller.calculateCapturePoint(robot = robot, command = command, leg_index = 0),
+                new_foot_locations_wrt_body[:, 0]
+            )
+        )
+
         # Track foot trajectory without body rpy
         robot.updateFootLocationsAssumingNoBodyRPY(new_foot_locations_wrt_body)
         # Desired body orientation matrix
@@ -75,12 +87,6 @@ class MasterController:
         robot.body_roll = command.body_roll
         robot.body_pitch = command.body_pitch
         robot.body_yaw = command.body_yaw
-        # print("FL FOOT:: Phase: {} | xyz: {} | Touchdown location: {}".format(
-        #         contact_pattern[0],
-        #         robot.foot_locations_wrt_body_true[:, 0],
-        #         leg_swing_controller.calculateRaibertTouchdownLocation(robot, command, 0)
-        #     )
-        # )
         
     def stepOnce(self, robot, command = None):
         """
