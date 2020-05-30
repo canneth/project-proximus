@@ -110,7 +110,7 @@ class Robot:
         )
 
         # Robot state
-        self.body_velocity = np.array([0.0, 0.0, 0.0])
+        self.body_velocity = np.zeros((4))
         self.body_roll = 0 # In radians
         self.body_pitch = 0 # In radians
         self.body_yaw = 0 # In radians

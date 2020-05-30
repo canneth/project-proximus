@@ -323,7 +323,7 @@ if __name__ == "__main__":
             config = config,
             trajectory_shape = FootTrajectory.TRIANGULAR,
             use_capture_point = False,
-            use_vpsp = True
+            use_vpsp = False
         )
         # Robot
         robot = Robot(

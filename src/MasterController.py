@@ -51,7 +51,7 @@ class MasterController:
         # Find phases of each leg (swing or stance)
         new_foot_locations_wrt_body = np.zeros((3, 4))
         contact_pattern = gait_controller.calculateContactPattern(robot.ticks)
-        foot_phase_proportions_completed = np.array([0, 0, 0, 0])
+        foot_phase_proportions_completed = np.zeros((4))
         for leg_index in range(4):
             leg_phase = contact_pattern[leg_index] # 0 = swing, 1 = stance
             if (leg_phase == 0):
@@ -170,8 +170,14 @@ class MasterController:
         ccw_leg_indicies = {0: 2, 2: 3, 3: 1, 1: 0} # CCW of leg 0 is 2, CCW of leg 2 is 3, CCW of leg 3 is 1, CCW of leg 1 is 0
         cw_leg_indicies = {0: 1, 1: 3, 3: 2, 2: 0} # CW of leg 0 is 1, CW of leg 1 is 3, CW of leg 3 is 2, CW of leg 2 is 0
         for i in range(4):
-            virtual_point_cw = new_foot_locations_wrt_body[:, i]*foot_weights[i] + new_foot_locations_wrt_body[:, i]*foot_weights[cw_leg_indicies[i]]
-            virtual_point_ccw = new_foot_locations_wrt_body[:, i]*foot_weights[i] + new_foot_locations_wrt_body[:, i]*foot_weights[ccw_leg_indicies[i]]
+            virtual_point_cw = (
+                new_foot_locations_wrt_body[:, i]*foot_weights[i]
+                + new_foot_locations_wrt_body[:, cw_leg_indicies[i]]*(1.0 - foot_weights[i])
+            )
+            virtual_point_ccw = (
+                new_foot_locations_wrt_body[:, i]*foot_weights[i]
+                + new_foot_locations_wrt_body[:, ccw_leg_indicies[i]]*(1.0 - foot_weights[i])
+            )
             virtual_points[i, 0, :] = virtual_point_cw
             virtual_points[i, 1, :] = virtual_point_ccw
         # Calculate the VPSP verticies for each leg
