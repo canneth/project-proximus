@@ -101,5 +101,5 @@ if __name__ == "__main__":
         # Every time the plot updates, increase time step counter j to the next time step
         j += 1
 
-    ani = FuncAnimation(fig, draw_frame, interval = 100)
+    ani = FuncAnimation(fig, draw_frame, interval = 50)
     plt.show()

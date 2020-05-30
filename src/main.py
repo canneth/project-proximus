@@ -9,8 +9,8 @@ from Robot import Mode
 from Command import Command
 from Config import Config
 from MasterController import MasterController
-from DataLogger import DataLogger
 from IMU import IMU
+from DataLogger import DataLogger
 
 from collections import defaultdict
 
@@ -25,21 +25,6 @@ from filterpy.common import Q_discrete_white_noise
 from pathlib import Path
 
 import time
-
-def ik_check(client_id, robot):
-    
-    _, foot_pos = sim.simxGetObjectPosition(client_id, robot.back_left_foot, robot.body_frame, sim.simx_opmode_blocking)
-    print("Target position: {}".format(foot_pos))
-
-    robot.front_left_leg.moveFoot([0.19302406907081604, 0.11094817519187927, -0.22628307342529297]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-    robot.front_right_leg.moveFoot([0.19302406907081604, -0.11094817519187927, -0.22628307342529297]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-    robot.back_left_leg.moveFoot([-0.1929716169834137, 0.11089962720870972, -0.22629320621490479]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-    robot.back_right_leg.moveFoot([-0.19296878576278687, -0.11091902107000351, -0.22629079222679138]) # Corresponds to joint angles (in degrees) [0, -45, 0]
-
-    time.sleep(0.5)
-    
-    _, foot_pos = sim.simxGetObjectPosition(client_id, back_left_foot, body_frame, sim.simx_opmode_blocking)
-    print("Current position: {}".format(foot_pos))
 
 def getContactPatternIndex(contact_pattern, gait_schedule):
     """
@@ -318,24 +303,25 @@ if __name__ == "__main__":
         _, world_frame = sim.simxGetObjectHandle(client_id, "world_frame", sim.simx_opmode_blocking)
         # Create configuration object which stores all configuration parameters used by almost everything
         config = Config()
+        # Sensors
+        imu = IMU(client_id)
         # Master Controller
         master_controller = MasterController(
             config = config,
+            imu = imu,
             trajectory_shape = FootTrajectory.TRIANGULAR,
             use_capture_point = False,
-            use_vpsp = False
+            use_vpsp = True,
+            use_tilt_stablisation = True
         )
         # Robot
         robot = Robot(
             client_id = client_id,
             stance_polygon_length = 0.4,
-            stance_polygon_width = 0.15,
+            stance_polygon_width = 0.18,
             stance_height = 0.225,
             swing_height = 0.08
         )
-
-        # Sensors
-        imu = IMU(client_id)
 
         ### Kalman Filter Setup ###
         dt = config.dt
@@ -465,7 +451,7 @@ if __name__ == "__main__":
         start_time = time.time()
 
         initialisation_time = 1.0
-        end_time = 10.0
+        time_section_duration = 10.0
 
         ### LOOP ###
         while True:
@@ -478,18 +464,27 @@ if __name__ == "__main__":
             time_since_start = current_time - start_time
             if (time_since_start < initialisation_time):
                 # Initialisation time for KF and simulation to stabilise
-                command.stance_height = 0.2
+                command.stance_height = 0.18
                 command.mode = Mode.REST
-                command.body_velocity = [0, 0, 0]
-            elif (time_since_start < end_time):
-                command.stance_height = 0.2
+            elif (time_since_start < time_section_duration):
                 command.mode = Mode.TROT
                 command.body_velocity = [0.2, 0, 0]
+                command.swing_height = 0.1
+            elif (time_since_start < time_section_duration*2):
+                command.mode = Mode.TROT
+                command.body_velocity = [0, 0.2, 0]
+                command.swing_height = 0.1
+            elif (time_since_start < time_section_duration*3):
+                command.mode = Mode.TROT
+                command.body_velocity = [-0.2, 0, 0]
+                command.swing_height = 0.1
+            elif (time_since_start < time_section_duration*4):
+                command.mode = Mode.TROT
+                command.body_velocity = [0, -0.2, 0]
                 command.swing_height = 0.1
             else:
                 # End sim
                 break
-
 
             master_controller.stepOnce(robot, command)
             # Generate Q according to contact_pattern

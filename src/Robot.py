@@ -8,6 +8,7 @@ from math import pi as PI
 from enum import Enum
 
 from Leg import Leg
+from IMU import IMU
 
 from simple_pid import PID
 
