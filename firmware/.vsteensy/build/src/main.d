@@ -1,4 +1,94 @@
-.vsteensy/build/src/main.o: src/main.cpp \
+.vsteensy/build/src/main.o: src/main.cpp lib/EigenArduino/Eigen30.h \
+ lib/EigenArduino/EigenAVR.h lib/EigenArduino/Eigen/Core \
+ lib/EigenArduino/Eigen/src/Core/util/DisableStupidWarnings.h \
+ lib/EigenArduino/Eigen/src/Core/util/Macros.h \
+ lib/EigenArduino/Eigen/src/Core/util/Constants.h \
+ lib/EigenArduino/Eigen/src/Core/util/ForwardDeclarations.h \
+ lib/EigenArduino/Eigen/src/Core/util/Meta.h \
+ lib/EigenArduino/Eigen/src/Core/util/XprHelper.h \
+ lib/EigenArduino/Eigen/src/Core/util/StaticAssert.h \
+ lib/EigenArduino/Eigen/src/Core/util/Memory.h \
+ lib/EigenArduino/Eigen/src/Core/NumTraits.h \
+ lib/EigenArduino/Eigen/src/Core/MathFunctions.h \
+ lib/EigenArduino/Eigen/src/Core/GenericPacketMath.h \
+ lib/EigenArduino/Eigen/src/Core/arch/Default/Settings.h \
+ lib/EigenArduino/Eigen/src/Core/Functors.h \
+ lib/EigenArduino/Eigen/src/Core/DenseCoeffsBase.h \
+ lib/EigenArduino/Eigen/src/Core/DenseBase.h \
+ lib/EigenArduino/Eigen/src/Core/../plugins/BlockMethods.h \
+ lib/EigenArduino/Eigen/src/Core/MatrixBase.h \
+ lib/EigenArduino/Eigen/src/Core/../plugins/CommonCwiseUnaryOps.h \
+ lib/EigenArduino/Eigen/src/Core/../plugins/CommonCwiseBinaryOps.h \
+ lib/EigenArduino/Eigen/src/Core/../plugins/MatrixCwiseUnaryOps.h \
+ lib/EigenArduino/Eigen/src/Core/../plugins/MatrixCwiseBinaryOps.h \
+ lib/EigenArduino/Eigen/src/Core/EigenBase.h \
+ lib/EigenArduino/Eigen/src/Core/Assign.h \
+ lib/EigenArduino/Eigen/src/Core/util/BlasUtil.h \
+ lib/EigenArduino/Eigen/src/Core/DenseStorage.h \
+ lib/EigenArduino/Eigen/src/Core/NestByValue.h \
+ lib/EigenArduino/Eigen/src/Core/ForceAlignedAccess.h \
+ lib/EigenArduino/Eigen/src/Core/ReturnByValue.h \
+ lib/EigenArduino/Eigen/src/Core/NoAlias.h \
+ lib/EigenArduino/Eigen/src/Core/PlainObjectBase.h \
+ lib/EigenArduino/Eigen/src/Core/Matrix.h \
+ lib/EigenArduino/Eigen/src/Core/Array.h \
+ lib/EigenArduino/Eigen/src/Core/CwiseBinaryOp.h \
+ lib/EigenArduino/Eigen/src/Core/CwiseUnaryOp.h \
+ lib/EigenArduino/Eigen/src/Core/CwiseNullaryOp.h \
+ lib/EigenArduino/Eigen/src/Core/CwiseUnaryView.h \
+ lib/EigenArduino/Eigen/src/Core/SelfCwiseBinaryOp.h \
+ lib/EigenArduino/Eigen/src/Core/Dot.h \
+ lib/EigenArduino/Eigen/src/Core/StableNorm.h \
+ lib/EigenArduino/Eigen/src/Core/MapBase.h \
+ lib/EigenArduino/Eigen/src/Core/Stride.h \
+ lib/EigenArduino/Eigen/src/Core/Map.h \
+ lib/EigenArduino/Eigen/src/Core/Block.h \
+ lib/EigenArduino/Eigen/src/Core/VectorBlock.h \
+ lib/EigenArduino/Eigen/src/Core/Transpose.h \
+ lib/EigenArduino/Eigen/src/Core/DiagonalMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/Diagonal.h \
+ lib/EigenArduino/Eigen/src/Core/DiagonalProduct.h \
+ lib/EigenArduino/Eigen/src/Core/PermutationMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/Transpositions.h \
+ lib/EigenArduino/Eigen/src/Core/Redux.h \
+ lib/EigenArduino/Eigen/src/Core/Visitor.h \
+ lib/EigenArduino/Eigen/src/Core/Fuzzy.h \
+ lib/EigenArduino/Eigen/src/Core/IO.h \
+ lib/EigenArduino/Eigen/src/Core/Swap.h \
+ lib/EigenArduino/Eigen/src/Core/CommaInitializer.h \
+ lib/EigenArduino/Eigen/src/Core/Flagged.h \
+ lib/EigenArduino/Eigen/src/Core/ProductBase.h \
+ lib/EigenArduino/Eigen/src/Core/Product.h \
+ lib/EigenArduino/Eigen/src/Core/TriangularMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/SelfAdjointView.h \
+ lib/EigenArduino/Eigen/src/Core/SolveTriangular.h \
+ lib/EigenArduino/Eigen/src/Core/products/Parallelizer.h \
+ lib/EigenArduino/Eigen/src/Core/products/CoeffBasedProduct.h \
+ lib/EigenArduino/Eigen/src/Core/products/GeneralBlockPanelKernel.h \
+ lib/EigenArduino/Eigen/src/Core/products/GeneralMatrixVector.h \
+ lib/EigenArduino/Eigen/src/Core/products/GeneralMatrixMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/products/GeneralMatrixMatrixTriangular.h \
+ lib/EigenArduino/Eigen/src/Core/products/SelfadjointMatrixVector.h \
+ lib/EigenArduino/Eigen/src/Core/products/SelfadjointMatrixMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/products/SelfadjointProduct.h \
+ lib/EigenArduino/Eigen/src/Core/products/SelfadjointRank2Update.h \
+ lib/EigenArduino/Eigen/src/Core/products/TriangularMatrixVector.h \
+ lib/EigenArduino/Eigen/src/Core/products/TriangularMatrixMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/products/TriangularSolverMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/products/TriangularSolverVector.h \
+ lib/EigenArduino/Eigen/src/Core/BandMatrix.h \
+ lib/EigenArduino/Eigen/src/Core/BooleanRedux.h \
+ lib/EigenArduino/Eigen/src/Core/Select.h \
+ lib/EigenArduino/Eigen/src/Core/VectorwiseOp.h \
+ lib/EigenArduino/Eigen/src/Core/Random.h \
+ lib/EigenArduino/Eigen/src/Core/Replicate.h \
+ lib/EigenArduino/Eigen/src/Core/Reverse.h \
+ lib/EigenArduino/Eigen/src/Core/ArrayBase.h \
+ lib/EigenArduino/Eigen/src/Core/../plugins/ArrayCwiseUnaryOps.h \
+ lib/EigenArduino/Eigen/src/Core/../plugins/ArrayCwiseBinaryOps.h \
+ lib/EigenArduino/Eigen/src/Core/ArrayWrapper.h \
+ lib/EigenArduino/Eigen/src/Core/GlobalFunctions.h \
+ lib/EigenArduino/Eigen/src/Core/util/ReenableStupidWarnings.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WProgram.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
@@ -32,4 +122,4 @@
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/elapsedMillis.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/IntervalTimer.h \
- src/GlobalConstants.h
+ src/GlobalConstants.h src/ConvenienceFunctions.h src/TestClass.h

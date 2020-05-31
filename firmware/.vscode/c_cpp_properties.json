@@ -5,13 +5,14 @@
       "includePath": [
         "src/**",
         "C:\\Program Files (x86)\\Arduino\\hardware\\teensy\\avr\\cores\\teensy4",
-        "lib/AccelStepper/**",
-        "lib/PWMServo/**"
+        "lib/EigenArduino/**",
+        "lib/PWMServo/**",
+        "lib/STLport_v5_2_1/**"
       ],
       "forcedInclude": [],
       "defines": [
         "__IMXRT1062__",
-        "TEENSYDUINO=148",
+        "TEENSYDUINO=151",
         "F_CPU=600000000",
         "USB_SERIAL",
         "LAYOUT_US_ENGLISH",

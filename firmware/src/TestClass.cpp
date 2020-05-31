@@ -13,3 +13,7 @@ TestClass::TestClass(
 uint8_t TestClass::getTestVar(){
   return test_var;
 }
+
+uint8_t TestClass::returnSomeNumber() {
+  return 10;
+}

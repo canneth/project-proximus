@@ -7,7 +7,7 @@
 # Optimize           Faster
 # Keyboard Layout    US English
 #
-# 31/5/2020 23:26
+# 1/6/2020 03:33
 #******************************************************************************
 SHELL            := cmd.exe
 export SHELL
@@ -17,11 +17,11 @@ BOARD_ID         := TEENSY40
 
 MCU              := imxrt1062
 
-LIBS_SHARED_BASE := C:\PROGRA~2\Arduino\sketches\libraries
+LIBS_SHARED_BASE := C:\Users\User\Documents\Arduino\libraries
 LIBS_SHARED      := 
 
 LIBS_LOCAL_BASE  := lib
-LIBS_LOCAL       := AccelStepper PWMServo 
+LIBS_LOCAL       := EigenArduino PWMServo STLport_v5_2_1 
 
 CORE_BASE        := C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4
 GCC_BASE         := C:\PROGRA~2\Arduino\hardware\tools\arm\bin
@@ -43,7 +43,7 @@ FLAGS_LD    := -Wl,--print-memory-usage,--gc-sections,--relax,--defsym=__rtc_loc
 
 LIBS        := -larm_cortexM7lfsp_math -lm -lstdc++
 
-DEFINES     := -D__IMXRT1062__ -DTEENSYDUINO=148 -DARDUINO_TEENSY40 -DARDUINO=10807
+DEFINES     := -D__IMXRT1062__ -DTEENSYDUINO=151 -DARDUINO_TEENSY40 -DARDUINO=10807
 DEFINES     += -DF_CPU=600000000 -DUSB_SERIAL -DLAYOUT_US_ENGLISH
 
 CPP_FLAGS   := $(FLAGS_CPU) $(FLAGS_OPT) $(FLAGS_COM) $(DEFINES) $(FLAGS_CPP)

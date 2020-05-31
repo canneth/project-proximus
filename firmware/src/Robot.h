@@ -2,7 +2,7 @@
 #ifndef ROBOT_H
 #define ROBOT_H
 
-namespace project_namespace;
+namespace project_namespace {
     class Robot {
         private:
             float stance_polygon_length;
@@ -26,6 +26,5 @@ namespace project_namespace;
         public:
 
     }
-
-
+}
 #endif

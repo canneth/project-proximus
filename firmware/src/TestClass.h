@@ -17,6 +17,8 @@ namespace project_namespace {
       );
       // GETTERS
       uint8_t getTestVar();
+      // Misc.
+      static uint8_t returnSomeNumber();
 
   };
 }
