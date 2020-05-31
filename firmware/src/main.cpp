@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 
 #include "GlobalConstants.h"
@@ -5,6 +6,8 @@
 using namespace project_namespace;
 
 const uint8_t led_pin = 13;
+
+Mode mode = Mode::TROT;
 
 void setup() {
   Serial.begin(600000000);

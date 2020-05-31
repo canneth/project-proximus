@@ -1,4 +1,5 @@
-.vsteensy/build/src/main.o: src/main.cpp \
+.vsteensy/build/core/main.o: \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/main.cpp \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WProgram.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
@@ -31,5 +32,4 @@
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WCharacter.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/elapsedMillis.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/IntervalTimer.h \
- src/GlobalConstants.h
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/IntervalTimer.h

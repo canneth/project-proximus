@@ -8,6 +8,5 @@ namespace project_namespace {
         REST,
         TROT
     };
-
 }
 #endif
