@@ -1,11 +1,12 @@
 
 import sim
 
+from GlobalConstants import Mode
+from GlobalConstants import Gait
 from GlobalConstants import FootTrajectory
 
 from Leg import Leg
 from Robot import Robot
-from Robot import Mode
 from Command import Command
 from Config import Config
 from MasterController import MasterController
@@ -319,9 +320,15 @@ if __name__ == "__main__":
             client_id = client_id,
             stance_polygon_length = 0.4,
             stance_polygon_width = 0.18,
-            stance_height = 0.225,
-            swing_height = 0.08
+            stance_height = 0.225
         )
+        # Command
+        command = Command()
+        command.stance_polygon_length = 0.4
+        command.stance_polygon_width = 0.18
+        command.stance_height = 0.18
+        command.mode = Mode.REST
+        master_controller.stepOnce(robot, command)
 
         ### Kalman Filter Setup ###
         dt = config.dt
@@ -445,7 +452,6 @@ if __name__ == "__main__":
             save_file_path = Path(".") / "data" / "vpsp_data.csv"
         )
 
-        command = Command()
 
         last_time = time.time()
         start_time = time.time()
@@ -464,8 +470,7 @@ if __name__ == "__main__":
             time_since_start = current_time - start_time
             if (time_since_start < initialisation_time):
                 # Initialisation time for KF and simulation to stabilise
-                command.stance_height = 0.18
-                command.mode = Mode.REST
+                pass
             elif (time_since_start < time_section_duration):
                 command.mode = Mode.TROT
                 command.body_velocity = [0.2, 0, 0]

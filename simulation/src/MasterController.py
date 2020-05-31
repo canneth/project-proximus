@@ -1,11 +1,11 @@
 
+from GlobalConstants import Mode
 from GlobalConstants import Gait
 from GlobalConstants import FootTrajectory
 
 from GaitController import GaitController
 from LegStanceController import LegStanceController
 from LegSwingController import LegSwingController
-from Robot import Mode
 
 import numpy as np
 from transforms3d.euler import euler2mat, quat2euler
@@ -33,6 +33,8 @@ class MasterController:
 
         self.trot_controller = GaitController(config = config, gait = Gait.TROT)
 
+        self.ticks = 0
+
     def calculateFootLocationsForNextGaitStep(self, robot, command, gait_controller):
         """
         DESCRIPTION:
@@ -56,14 +58,14 @@ class MasterController:
         leg_swing_controller = LegSwingController(gait_config = gait_controller.gait_config)
         # Find phases of each leg (swing or stance)
         new_foot_locations_wrt_body = np.zeros((3, 4))
-        contact_pattern = gait_controller.calculateContactPattern(robot.ticks)
+        contact_pattern = gait_controller.calculateContactPattern(self.ticks)
         foot_phase_proportions_completed = np.zeros((4))
         for leg_index in range(4):
             leg_phase = contact_pattern[leg_index] # 0 = swing, 1 = stance
             if (leg_phase == 0):
                 # Leg is in swing phase
                 leg_swing_proportion_completed = (
-                    gait_controller.calculateTicksIntoCurrentLegPhase(ticks = robot.ticks, leg_index = leg_index)
+                    gait_controller.calculateTicksIntoCurrentLegPhase(ticks = self.ticks, leg_index = leg_index)
                     / gait_controller.gait_config.leg_swing_duration_in_ticks
                 )
                 new_foot_locations_wrt_body[:, leg_index] = (
@@ -80,7 +82,7 @@ class MasterController:
             elif (leg_phase == 1):
                 # Leg is in stance phase
                 leg_stance_proportion_completed = (
-                    gait_controller.calculateTicksIntoCurrentLegPhase(ticks = robot.ticks, leg_index = leg_index)
+                    gait_controller.calculateTicksIntoCurrentLegPhase(ticks = self.ticks, leg_index = leg_index)
                     / gait_controller.gait_config.leg_stance_duration_in_ticks
                 )
                 new_foot_locations_wrt_body[:, leg_index] = leg_stance_controller.calculateNewFootLocation(robot, command, leg_index)
@@ -222,13 +224,14 @@ class MasterController:
             robot.mode = Mode.TROT
 
         if robot.mode == Mode.REST:
+            self.ticks = 0
             # Calculate neutral stance positions for each leg
             new_foot_locations_wrt_body = np.concatenate( \
                 ( \
-                    np.array([[robot.stance_polygon_length/2, robot.stance_polygon_width/2, -command.stance_height]]).T, \
-                    np.array([[robot.stance_polygon_length/2, -robot.stance_polygon_width/2, -command.stance_height]]).T, \
-                    np.array([[-robot.stance_polygon_length/2, robot.stance_polygon_width/2, -command.stance_height]]).T, \
-                    np.array([[-robot.stance_polygon_length/2, -robot.stance_polygon_width/2, -command.stance_height]]).T, \
+                    np.array([[command.stance_polygon_length/2, command.stance_polygon_width/2, -command.stance_height]]).T, \
+                    np.array([[command.stance_polygon_length/2, -command.stance_polygon_width/2, -command.stance_height]]).T, \
+                    np.array([[-command.stance_polygon_length/2, command.stance_polygon_width/2, -command.stance_height]]).T, \
+                    np.array([[-command.stance_polygon_length/2, -command.stance_polygon_width/2, -command.stance_height]]).T, \
                 ),
                 axis = 1
             )
@@ -252,6 +255,8 @@ class MasterController:
             # Update robot resting foot locations
             robot.foot_locations_wrt_body_at_rest = new_foot_locations_wrt_body
             # Update robot attributes
+            robot.stance_polygon_length = command.stance_polygon_length
+            robot.stance_polygon_width = command.stance_polygon_width
             robot.stance_height = command.stance_height
             robot.body_roll = command.body_roll
             robot.body_pitch = command.body_pitch
@@ -324,6 +329,6 @@ class MasterController:
             robot.body_roll = command.body_roll
             robot.body_pitch = command.body_pitch
             robot.body_yaw = command.body_yaw
-        
-        robot.ticks += 1
+
+            self.ticks += 1
 

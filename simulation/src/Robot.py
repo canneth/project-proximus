@@ -5,16 +5,14 @@ import numpy as np
 from numpy.linalg import norm
 from math import pi as PI
 
-from enum import Enum
+from GlobalConstants import Mode
+from GlobalConstants import Gait
+from GlobalConstants import FootTrajectory
 
 from Leg import Leg
 from IMU import IMU
 
 from simple_pid import PID
-
-class Mode(Enum):
-    REST = 0
-    TROT = 1
 
 class Robot:
     def __init__(
@@ -22,8 +20,7 @@ class Robot:
         client_id,
         stance_polygon_length = 0.4,
         stance_polygon_width = 0.2,
-        stance_height = 0.225,
-        swing_height = 0.08
+        stance_height = 0.225
     ):
         
         self.client_id = client_id
@@ -111,34 +108,26 @@ class Robot:
         )
 
         # Robot state
+        self.stance_polygon_length = 0.0
+        self.stance_polygon_width = 0.0
+        self.stance_height = 0.0
+        self.body_roll = 0.0 # In radians
+        self.body_pitch = 0.0 # In radians
+        self.body_yaw = 0.0 # In radians
         self.body_velocity = np.zeros((4))
-        self.body_roll = 0 # In radians
-        self.body_pitch = 0 # In radians
-        self.body_yaw = 0 # In radians
-        self.stance_polygon_length = stance_polygon_length
-        self.stance_polygon_width = stance_polygon_width
-        self.stance_height = stance_height
+
         self.foot_locations_wrt_body_true = np.zeros((3, 4)) # 3x4, Each column represents a foot
         self.foot_locations_wrt_body_assuming_no_body_rpy = np.zeros((3, 4))
+        self.foot_locations_wrt_body_at_rest = np.zeros((3, 4))
+
         self.foot_velocities_wrt_body = np.zeros((3, 4))
+
         self.joint_angles = np.zeros((3, 4))
         self.contact_pattern = np.ones((4)) # By default, all legs in stance
-        self.ticks = 0
-        self.mode = Mode.REST
 
         self.p_b_vpsp = np.zeros((3))
         self.virtual_points = np.zeros((4, 2, 3))
         self.vpsp_vertices = np.zeros((3, 4))
-
-        self.foot_locations_wrt_body_at_rest = np.concatenate( \
-            ( \
-                np.array([[self.stance_polygon_length/2, self.stance_polygon_width/2, -self.stance_height]]).T, \
-                np.array([[self.stance_polygon_length/2, -self.stance_polygon_width/2, -self.stance_height]]).T, \
-                np.array([[-self.stance_polygon_length/2, self.stance_polygon_width/2, -self.stance_height]]).T, \
-                np.array([[-self.stance_polygon_length/2, -self.stance_polygon_width/2, -self.stance_height]]).T, \
-            ),
-            axis = 1
-        )
 
     def __repr__(self):
         print("An instance of the custom Robot class.")
