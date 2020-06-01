@@ -39,8 +39,9 @@ class IMU:
         + self._accel: A (3,) array of accelerometer readings.
         """
         last_vel = self._vel
-        current_vel = pybullet.getBaseVelocity(self.robot_sim_id)[0]
+        current_vel = np.array(pybullet.getBaseVelocity(self.robot_sim_id)[0]).reshape(3)
         self._accel = (1.0/self.config.dt)*(current_vel - last_vel)
+        self._vel = current_vel
         return self._accel
 
     @property

@@ -312,7 +312,7 @@ if __name__ == "__main__":
             imu = imu,
             trajectory_shape = FootTrajectory.TRIANGULAR,
             use_capture_point = False,
-            use_vpsp = True,
+            use_vpsp = False,
             use_tilt_stablisation = True
         )
         # Robot

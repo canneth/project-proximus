@@ -19,7 +19,8 @@ if __name__ == "__main__":
     csv_data = np.array(csv_data).astype(np.float)
 
     # Prepare data
-    data = np.delete(csv_data, slice(0, 200), axis = 0)
+    data = csv_data
+    # data = np.delete(csv_data, slice(0, 200), axis = 0)
     p_b_vpsp_x = data[:, 1].reshape(-1, 1)
     p_b_vpsp_y = data[:, 2].reshape(-1, 1)
     FL_cw_vp_x = data[:, 3].reshape(-1, 1)

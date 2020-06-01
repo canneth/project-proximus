@@ -295,11 +295,7 @@ if __name__ == "__main__":
     ###
     
     # Robot
-    robot = Robot(
-        stance_polygon_length = 0.4,
-        stance_polygon_width = 0.18,
-        stance_height = 0.225
-    )
+    robot = Robot()
     # Create configuration object which stores all configuration parameters used by almost everything
     config = Config()
     dt = config.dt
@@ -318,7 +314,7 @@ if __name__ == "__main__":
     command = Command()
     command.stance_polygon_length = 0.4
     command.stance_polygon_width = 0.18
-    command.stance_height = 0.18
+    command.stance_height = 0.2
     command.mode = Mode.REST
     master_controller.stepOnce(robot, command)
 
@@ -388,10 +384,6 @@ if __name__ == "__main__":
             "contact_pattern_index",
             "p_x_true", "p_y_true", "p_z_true",
             "v_x_true", "v_y_true", "v_z_true",
-            "p_1x_true", "p_1y_true", "p_1z_true",
-            "p_2x_true", "p_2y_true", "p_2z_true",
-            "p_3x_true", "p_3y_true", "p_3z_true",
-            "p_4x_true", "p_4y_true", "p_4z_true",
             "p_x_est", "p_y_est", "p_z_est",
             "v_x_est", "v_y_est", "v_z_est",
             "p_1x_est", "p_1y_est", "p_1z_est",
@@ -447,22 +439,30 @@ if __name__ == "__main__":
     pybullet.setGravity(0, 0, -9.81)
     pybullet.setRealTimeSimulation(0) # Step simulation only when setpSimulation() is called
     sim_duration = 30 # in seconds
+    sim_timestep = 1.0/240.0
     initialisation_duration = 2
     i = 0
-    while (i <= sim_duration/dt):
-        time_elapsed = i*dt
-
+    last_sim_timestep = 0
+    while (i <= sim_duration/sim_timestep):
         pybullet.stepSimulation()
-        time.sleep(config.dt)
+        time.sleep(sim_timestep)
         i += 1
 
-        if (time_elapsed <= initialisation_duration):
+        sim_time_elapsed = i*sim_timestep
+        if (sim_time_elapsed <= initialisation_duration):
             continue
-        else:
-            command.mode = Mode.TROT
-            command.body_velocity = [0.2, 0, 0]
-            command.swing_height = 0.1
-            master_controller.stepOnce(robot, command)
+
+        current_sim_timestep = i*sim_timestep
+        sim_time_delta = current_sim_timestep - last_sim_timestep
+        if (sim_time_delta < dt):
+            continue
+        last_sim_timestep = current_sim_timestep
+        print(current_sim_timestep)
+
+        command.mode = Mode.TROT
+        command.body_velocity = [0.5, 0, 0]
+        command.swing_height = 0.1
+        master_controller.stepOnce(robot, command)
 
         # Generate Q according to contact_pattern
         # Q should be (18, 18)
@@ -509,21 +509,11 @@ if __name__ == "__main__":
                 float(kalman_filter.x.reshape(18)[5])
             ]
         )
-
-        """
         ### Collecting and formatting data for collection ###
         # Getting true values
-        t = time.time() - start_time
-        _, p_0b = sim.simxGetObjectPosition(client_id, robot.body_frame, world_frame, sim.simx_opmode_streaming)
-        _, v_0b, _ = sim.simxGetObjectVelocity(client_id, robot.body_frame, sim.simx_opmode_streaming)
-        _, p_1_rel = sim.simxGetObjectPosition(client_id, robot.front_left_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
-        _, p_2_rel = sim.simxGetObjectPosition(client_id, robot.front_right_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
-        _, p_3_rel = sim.simxGetObjectPosition(client_id, robot.back_left_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
-        _, p_4_rel = sim.simxGetObjectPosition(client_id, robot.back_right_leg.foot, robot.body_frame, sim.simx_opmode_streaming)
-        _, p_1_abs = sim.simxGetObjectPosition(client_id, robot.front_left_leg.foot, world_frame, sim.simx_opmode_streaming)
-        _, p_2_abs = sim.simxGetObjectPosition(client_id, robot.front_right_leg.foot, world_frame, sim.simx_opmode_streaming)
-        _, p_3_abs = sim.simxGetObjectPosition(client_id, robot.back_left_leg.foot, world_frame, sim.simx_opmode_streaming)
-        _, p_4_abs = sim.simxGetObjectPosition(client_id, robot.back_right_leg.foot, world_frame, sim.simx_opmode_streaming)
+        t = sim_time_elapsed
+        p_0b = np.array(pybullet.getBasePositionAndOrientation(bodyUniqueId = robot.sim_id)[0]).reshape(3)
+        v_0b = np.array(pybullet.getBaseVelocity(bodyUniqueId = robot.sim_id)[0]).reshape(3)
         contact_pattern_index = getContactPatternIndex(
             contact_pattern = robot.contact_pattern,
             gait_schedule = master_controller.trot_controller.gait_config.contact_schedule
@@ -604,18 +594,6 @@ if __name__ == "__main__":
         data_logger_kf.data_dict["v_x_true"] = v_0b[0]
         data_logger_kf.data_dict["v_y_true"] = v_0b[1]
         data_logger_kf.data_dict["v_z_true"] = v_0b[2]
-        data_logger_kf.data_dict["p_1x_true"] = p_1_abs[0]
-        data_logger_kf.data_dict["p_1y_true"] = p_1_abs[1]
-        data_logger_kf.data_dict["p_1z_true"] = p_1_abs[2]
-        data_logger_kf.data_dict["p_2x_true"] = p_2_abs[0]
-        data_logger_kf.data_dict["p_2y_true"] = p_2_abs[1]
-        data_logger_kf.data_dict["p_2z_true"] = p_2_abs[2]
-        data_logger_kf.data_dict["p_3x_true"] = p_3_abs[0]
-        data_logger_kf.data_dict["p_3y_true"] = p_3_abs[1]
-        data_logger_kf.data_dict["p_3z_true"] = p_3_abs[2]
-        data_logger_kf.data_dict["p_4x_true"] = p_4_abs[0]
-        data_logger_kf.data_dict["p_4y_true"] = p_4_abs[1]
-        data_logger_kf.data_dict["p_4z_true"] = p_4_abs[2]
         data_logger_kf.data_dict["p_x_est"] = p_x_est
         data_logger_kf.data_dict["p_y_est"] = p_y_est
         data_logger_kf.data_dict["p_z_est"] = p_z_est
@@ -713,6 +691,5 @@ if __name__ == "__main__":
         # Write data #
         data_logger_kf.writeData()
         data_logger_vpsp.writeData()
-        """
 
     input()

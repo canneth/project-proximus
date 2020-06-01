@@ -268,14 +268,6 @@ class MasterController:
             )
             # Update robot contact pattern
             robot.contact_pattern = contact_pattern
-
-            p_b_vpsp, virtual_points, vpsp_vertices = (
-                self.calculateVPSPBodyLocation(
-                    new_foot_locations_wrt_body,
-                    contact_pattern,
-                    foot_phase_proportions_completed
-                )
-            )
             # Track foot trajectory without body rpy
             robot.updateFootLocationsAssumingNoBodyRPY(new_foot_locations_wrt_body)
             # Desired body orientation matrix
@@ -293,11 +285,17 @@ class MasterController:
             )
 
             ### APPLY VPSP ###
+            p_b_vpsp, virtual_points, vpsp_vertices = (
+                self.calculateVPSPBodyLocation(
+                    new_foot_locations_wrt_body,
+                    contact_pattern,
+                    foot_phase_proportions_completed
+                )
+            )
             # Update robot p_b_vpsp, virtual_points and vpsp_vertices
             robot.p_b_vpsp = p_b_vpsp
             robot.virtual_points = virtual_points
             robot.vpsp_vertices = vpsp_vertices
-
             # Apply VPSP result to new_foot_locations_wrt_body
             # Negative foot movement --> positive body movement
             if (self.use_vpsp):
