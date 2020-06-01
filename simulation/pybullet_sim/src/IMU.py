@@ -1,15 +1,20 @@
 
-import sim
+import numpy as np
+import pybullet
 
 class IMU:
     def __init__(
         self,
-        client_id
+        robot_sim_id,
+        config
     ):
-        self.client_id = client_id
-        self._accel = [0, 0, 0]
-        self._gyro = [0, 0, 0]
-        self._quaternion = [0, 0, 0, 0]
+        self.robot_sim_id = robot_sim_id
+        self.config = config
+        
+        self._vel = np.zeros((3))
+        self._accel = np.zeros((3))
+        self._gyro = np.zeros((3))
+        self._quaternion = np.zeros((4))
 
     """
     Float signals from sim:
@@ -31,11 +36,11 @@ class IMU:
         Updates relevant attributes and returns them.
 
         RETURNS:
-        + self._accel: A (3,) list of accelerometer readings.
+        + self._accel: A (3,) array of accelerometer readings.
         """
-        _, self._accel[0] = sim.simxGetFloatSignal(self.client_id, "imu_accel_x", sim.simx_opmode_streaming)
-        _, self._accel[1] = sim.simxGetFloatSignal(self.client_id, "imu_accel_y", sim.simx_opmode_streaming)
-        _, self._accel[2] = sim.simxGetFloatSignal(self.client_id, "imu_accel_z", sim.simx_opmode_streaming)
+        last_vel = self._vel
+        current_vel = pybullet.getBaseVelocity(self.robot_sim_id)[0]
+        self._accel = (1.0/self.config.dt)*(current_vel - last_vel)
         return self._accel
 
     @property
@@ -45,11 +50,9 @@ class IMU:
         Updates relevant attributes and returns them.
 
         RETURNS:
-        + self._gyro: A (3,) list of gyro readings.
+        + self._gyro: A (3,) array of gyro readings.
         """
-        _, self._gyro[0] = sim.simxGetFloatSignal(self.client_id, "imu_gyro_x", sim.simx_opmode_streaming)
-        _, self._gyro[1] = sim.simxGetFloatSignal(self.client_id, "imu_gyro_y", sim.simx_opmode_streaming)
-        _, self._gyro[2] = sim.simxGetFloatSignal(self.client_id, "imu_gyro_z", sim.simx_opmode_streaming)
+        self.gyro = pybullet.getBaseVelocity(self.robot_sim_id)[1]
         return self._gyro
 
     @property
@@ -59,11 +62,7 @@ class IMU:
         Updates relevant attributes and returns them.
 
         RETURNS:
-        + self._quaternion: A (4,) list representing the quaternion representation of the heading wrt world_frame.
+        + self._quaternion: A (4,) array representing the quaternion representation of the heading wrt world_frame. [x, y, z, w].
         """
-        
-        _, self._quaternion[0] = sim.simxGetFloatSignal(self.client_id, "imu_quaternion_x", sim.simx_opmode_streaming)
-        _, self._quaternion[1] = sim.simxGetFloatSignal(self.client_id, "imu_quaternion_y", sim.simx_opmode_streaming)
-        _, self._quaternion[2] = sim.simxGetFloatSignal(self.client_id, "imu_quaternion_z", sim.simx_opmode_streaming)
-        _, self._quaternion[3] = sim.simxGetFloatSignal(self.client_id, "imu_quaternion_w", sim.simx_opmode_streaming)
+        self._quaternion = pybullet.getBasePositionAndOrientation(bodyUniqueId = self.robot_sim_id)[1]
         return self._quaternion

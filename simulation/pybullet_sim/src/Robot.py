@@ -1,5 +1,7 @@
 
-import sim
+import pybullet
+
+from pathlib import Path
 
 import numpy as np
 from numpy.linalg import norm
@@ -12,109 +14,87 @@ from GlobalConstants import FootTrajectory
 from Leg import Leg
 from IMU import IMU
 
-from simple_pid import PID
-
 class Robot:
     def __init__(
         self,
-        client_id,
         stance_polygon_length = 0.4,
         stance_polygon_width = 0.2,
         stance_height = 0.225
     ):
         
-        self.client_id = client_id
-
-        ### GET OBJECT HANDLES ###
-        _, self.body_frame = sim.simxGetObjectHandle(client_id, "body_frame", sim.simx_opmode_blocking)
-        _, self.body = sim.simxGetObjectHandle(client_id, "base_link_respondable", sim.simx_opmode_blocking)
-        # Front left leg
-        _, front_left_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_front_left", sim.simx_opmode_blocking)
-        _, front_left_coxa = sim.simxGetObjectHandle(client_id, "shoulder_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_femur_joint = sim.simxGetObjectHandle(client_id, "femur_front_left", sim.simx_opmode_blocking)
-        _, front_left_femur = sim.simxGetObjectHandle(client_id, "femur_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_front_left", sim.simx_opmode_blocking)
-        _, front_left_tibia = sim.simxGetObjectHandle(client_id, "tibia_front_left_respondable", sim.simx_opmode_blocking)
-        _, front_left_foot = sim.simxGetObjectHandle(client_id, "foot_front_left", sim.simx_opmode_blocking)
-        # Front right leg
-        _, front_right_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_front_right", sim.simx_opmode_blocking)
-        _, front_right_coxa = sim.simxGetObjectHandle(client_id, "shoulder_front_right_respondable", sim.simx_opmode_blocking)
-        _, front_right_femur_joint = sim.simxGetObjectHandle(client_id, "femur_front_right", sim.simx_opmode_blocking)
-        _, front_right_femur = sim.simxGetObjectHandle(client_id, "femur_front_right_respondable", sim.simx_opmode_blocking)
-        _, front_right_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_front_right", sim.simx_opmode_blocking)
-        _, front_right_tibia = sim.simxGetObjectHandle(client_id, "tibia_front_right_respondable", sim.simx_opmode_blocking)
-        _, front_right_foot = sim.simxGetObjectHandle(client_id, "foot_front_right", sim.simx_opmode_blocking)
-        # Back left leg
-        _, back_left_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_rear_left", sim.simx_opmode_blocking)
-        _, back_left_coxa = sim.simxGetObjectHandle(client_id, "shoulder_rear_left_respondable", sim.simx_opmode_blocking)
-        _, back_left_femur_joint = sim.simxGetObjectHandle(client_id, "femur_rear_left", sim.simx_opmode_blocking)
-        _, back_left_femur = sim.simxGetObjectHandle(client_id, "femur_rear_left_respondable", sim.simx_opmode_blocking)
-        _, back_left_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_rear_left", sim.simx_opmode_blocking)
-        _, back_left_tibia = sim.simxGetObjectHandle(client_id, "tibia_rear_left_respondable", sim.simx_opmode_blocking)
-        _, back_left_foot = sim.simxGetObjectHandle(client_id, "foot_rear_left", sim.simx_opmode_blocking)
-        # Back right leg
-        _, back_right_coxa_joint = sim.simxGetObjectHandle(client_id, "shoulder_rear_right", sim.simx_opmode_blocking)
-        _, back_right_coxa = sim.simxGetObjectHandle(client_id, "shoulder_rear_right_respondable", sim.simx_opmode_blocking)
-        _, back_right_femur_joint = sim.simxGetObjectHandle(client_id, "femur_rear_right", sim.simx_opmode_blocking)
-        _, back_right_femur = sim.simxGetObjectHandle(client_id, "femur_rear_right_respondable", sim.simx_opmode_blocking)
-        _, back_right_tibia_joint = sim.simxGetObjectHandle(client_id, "tibia_rear_right", sim.simx_opmode_blocking)
-        _, back_right_tibia = sim.simxGetObjectHandle(client_id, "tibia_rear_right_respondable", sim.simx_opmode_blocking)
-        _, back_right_foot = sim.simxGetObjectHandle(client_id, "foot_rear_right", sim.simx_opmode_blocking)
+        self.robot_urdf_path = Path("..") / "sim_model" / "A001_full_assem" / "urdf" / "A001_full_assem.urdf"
+        self.sim_id = pybullet.loadURDF(
+            fileName = str(self.robot_urdf_path),
+            basePosition = [0, 0, 0.3],
+            useFixedBase = 0
+        )
+        self.num_of_joints = pybullet.getNumJoints(self.sim_id)
+        self.sim_leg_index_dict = (
+            {pybullet.getJointInfo(bodyUniqueId = self.sim_id, jointIndex = i)[1].decode("ascii") : i for i in range(self.num_of_joints)}
+        )
 
         # Legs
         self.front_left_leg = Leg(
-            client_id,
-            self.body_frame,
-            front_left_coxa_joint,
-            front_left_coxa,
-            front_left_femur_joint,
-            front_left_femur,
-            front_left_tibia_joint,
-            front_left_tibia,
-            front_left_foot
+            robot_sim_id = self.sim_id,
+            coxa_joint_sim_id = self.sim_leg_index_dict["front_left_j1"],
+            femur_joint_sim_id = self.sim_leg_index_dict["front_left_j2"],
+            tibia_joint_sim_id = self.sim_leg_index_dict["front_left_j3"],
+            d_x = 0.155,
+            d_y = 0.04,
+            d_j2_j1_bx = 0.038,
+            d_j2_j1_by = 0.071,
+            l_2 = 0.160,
+            l_3 = 0.160,
+            joint_servo_directions = [1, -1, 1]
         )
         self.front_right_leg = Leg(
-            client_id,
-            self.body_frame,
-            front_right_coxa_joint,
-            front_right_coxa,
-            front_right_femur_joint,
-            front_right_femur,
-            front_right_tibia_joint,
-            front_right_tibia,
-            front_right_foot
+            robot_sim_id = self.sim_id,
+            coxa_joint_sim_id = self.sim_leg_index_dict["front_right_j1"],
+            femur_joint_sim_id = self.sim_leg_index_dict["front_right_j2"],
+            tibia_joint_sim_id = self.sim_leg_index_dict["front_right_j3"],
+            d_x = 0.155,
+            d_y = -0.04,
+            d_j2_j1_bx = 0.038,
+            d_j2_j1_by = -0.071,
+            l_2 = 0.160,
+            l_3 = 0.160,
+            joint_servo_directions = [-1, 1, -1]
         )
         self.back_left_leg = Leg(
-            client_id,
-            self.body_frame,
-            back_left_coxa_joint,
-            back_left_coxa,
-            back_left_femur_joint,
-            back_left_femur,
-            back_left_tibia_joint,
-            back_left_tibia,
-            back_left_foot
+            robot_sim_id = self.sim_id,
+            coxa_joint_sim_id = self.sim_leg_index_dict["back_left_j1"],
+            femur_joint_sim_id = self.sim_leg_index_dict["back_left_j2"],
+            tibia_joint_sim_id = self.sim_leg_index_dict["back_left_j3"],
+            d_x = -0.155,
+            d_y = 0.04,
+            d_j2_j1_bx = -0.038,
+            d_j2_j1_by = 0.071,
+            l_2 = 0.160,
+            l_3 = 0.160,
+            joint_servo_directions = [-1, 1, -1]
         )
         self.back_right_leg = Leg(
-            client_id,
-            self.body_frame,
-            back_right_coxa_joint,
-            back_right_coxa,
-            back_right_femur_joint,
-            back_right_femur,
-            back_right_tibia_joint,
-            back_right_tibia,
-            back_right_foot
+            robot_sim_id = self.sim_id,
+            coxa_joint_sim_id = self.sim_leg_index_dict["back_right_j1"],
+            femur_joint_sim_id = self.sim_leg_index_dict["back_right_j2"],
+            tibia_joint_sim_id = self.sim_leg_index_dict["back_right_j3"],
+            d_x = -0.155,
+            d_y = -0.04,
+            d_j2_j1_bx = -0.038,
+            d_j2_j1_by = -0.071,
+            l_2 = 0.160,
+            l_3 = 0.160,
+            joint_servo_directions = [1, -1, 1]
         )
 
         # Robot state
-        self.stance_polygon_length = 0.0
-        self.stance_polygon_width = 0.0
-        self.stance_height = 0.0
+        self.stance_polygon_length = stance_polygon_length
+        self.stance_polygon_width = stance_polygon_width
+        self.stance_height = stance_height
         self.body_roll = 0.0 # In radians
         self.body_pitch = 0.0 # In radians
         self.body_yaw = 0.0 # In radians
-        self.body_velocity = np.zeros((4))
+        self.body_velocity = np.zeros((3))
 
         self.foot_locations_wrt_body_true = np.zeros((3, 4)) # 3x4, Each column represents a foot
         self.foot_locations_wrt_body_assuming_no_body_rpy = np.zeros((3, 4))
