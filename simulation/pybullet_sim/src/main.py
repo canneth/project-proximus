@@ -66,6 +66,9 @@ def generateControlInputMatrix(imu, command):
     a_b_b = np.array(imu.accel_vals).reshape(3, 1)
     # Apply rotation matrix to acceleration
     a_0_b = R_0_b @ a_b_b
+    # Gravity vector
+    g_vec = np.array([0, 0, -9.81]).reshape(3, 1)
+    # g_vec = np.array([0, 0, 0]).reshape(3, 1)
     # Get velocity command from command
     v_b_command = np.array(command.body_velocity).reshape(3, 1)
     # Apply rotation matrix to velocity command
@@ -73,8 +76,8 @@ def generateControlInputMatrix(imu, command):
     # Build B
     B = np.block(
         [
-            [0.5*(dt**2)*a_0_b], # p_b
-            [dt*a_0_b], # v_b
+            [0.5*(dt**2)*(a_0_b + g_vec)], # p_b
+            [dt*(a_0_b + g_vec)], # v_b
             [np.zeros((3, 1))], # p_1
             [np.zeros((3, 1))], # p_2
             [np.zeros((3, 1))], # p_3
@@ -300,7 +303,15 @@ if __name__ == "__main__":
     config = Config()
     dt = config.dt
     # Sensors
-    imu = IMU(robot_sim_id = robot.sim_id, config = config)
+    imu = IMU(
+        robot_sim_id = robot.sim_id,
+        config = config,
+        noise_std = {
+            "accel": 0.35,
+            "gyro": np.radians(3.1),
+            "quaternion": np.radians(3.5)
+        }
+    )
     # Master Controller
     master_controller = MasterController(
         config = config,
@@ -308,7 +319,9 @@ if __name__ == "__main__":
         trajectory_shape = FootTrajectory.TRIANGULAR,
         use_capture_point = False,
         use_vpsp = False,
-        use_tilt_stablisation = False
+        use_accel_capture_point = False,
+        use_rp_capture_point = True,
+        use_rp_rate_capture_point = True
     )
     # Command
     command = Command()
@@ -426,8 +439,8 @@ if __name__ == "__main__":
             "FL_vt_x", "FL_vt_y",
             "FR_vt_x", "FR_vt_y",
             "BL_vt_x", "BL_vt_y",
-            "BR_vt_x", "BR_vt_y"
-
+            "BR_vt_x", "BR_vt_y",
+            "FL_phase", "FR_phase", "BL_phase", "BR_phase"
         ]
     )
     data_logger_vpsp = DataLogger(
@@ -438,15 +451,14 @@ if __name__ == "__main__":
     ### SIMULATE ###
     pybullet.setGravity(0, 0, -9.81)
     pybullet.setRealTimeSimulation(0) # Step simulation only when setpSimulation() is called
-    sim_duration = 30 # in seconds
-    sim_timestep = 1.0/240.0
     initialisation_duration = 2
-    i = 0
+    sim_duration = initialisation_duration + 20
+    sim_timestep = 1.0/240.0
+
     last_sim_timestep = 0
-    while (i <= sim_duration/sim_timestep):
+    for i in range(int(sim_duration/sim_timestep)):
         pybullet.stepSimulation()
         time.sleep(sim_timestep)
-        i += 1
 
         sim_time_elapsed = i*sim_timestep
         if (sim_time_elapsed <= initialisation_duration):
@@ -457,21 +469,31 @@ if __name__ == "__main__":
         if (sim_time_delta < dt):
             continue
         last_sim_timestep = current_sim_timestep
-        print(current_sim_timestep)
+        # print("sim_time_elapsed: {}".format(sim_time_elapsed))
 
-        command.mode = Mode.TROT
-        command.body_velocity = [0.5, 0, 0]
-        command.swing_height = 0.1
-        master_controller.stepOnce(robot, command)
+        if (sim_time_elapsed <= initialisation_duration + 3):
+            command.mode = Mode.TROT
+            command.body_velocity = [0, 0, 0]
+            command.swing_height = 0.1
+            master_controller.stepOnce(robot, command)
+        else:
+            command.mode = Mode.TROT
+            command.body_velocity = [0.3, 0, 0]
+            command.swing_height = 0.1
+            master_controller.stepOnce(robot, command)
+
 
         # Generate Q according to contact_pattern
         # Q should be (18, 18)
         Q = generateProcessCovarianceMatrix(
-            v_b_std = 0.5, # Process noise is high for velocity because model does not account for disturbances due to foot movement
-            p_1_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
-            p_2_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
-            p_3_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
-            p_4_std = 0.1, # Feet slip quite a bit, so the process noise is high for the foot locations
+            v_b_std = 0.05,
+            # Process noise is low for velocity because model because we need to trust the accelerometer
+            # to detect sharp changes in velocity, and the model primarily depends on accelerometer to
+            # integrate for velocity
+            p_1_std = 0.01, # Feet barely slip, so the process noise is very low for the foot locations
+            p_2_std = 0.01, # Feet barely slip, so the process noise is very low for the foot locations
+            p_3_std = 0.01, # Feet barely slip, so the process noise is very low for the foot locations
+            p_4_std = 0.01, # Feet barely slip, so the process noise is very low for the foot locations
             dt = dt,
             contact_pattern = robot.contact_pattern
         )
@@ -482,11 +504,11 @@ if __name__ == "__main__":
             z_p_2_std = 0.005, # Uncertainty in measured relative foot positions is low because servos move to commanded position very accurately
             z_p_3_std = 0.005, # Uncertainty in measured relative foot positions is low because servos move to commanded position very accurately
             z_p_4_std = 0.005, # Uncertainty in measured relative foot positions is low because servos move to commanded position very accurately
-            z_v_1_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
-            z_v_2_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
-            z_v_3_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
-            z_v_4_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, and so it's pretty inaccurate due to slippage
-            z_b_height_std = 0.1,
+            z_v_1_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, which isn't that great a heuristic
+            z_v_2_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, which isn't that great a heuristic
+            z_v_3_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, which isn't that great a heuristic
+            z_v_4_std = 0.1, # v_i represents the body velocity as extrapolated from foot velocity, which isn't that great a heuristic
+            z_b_height_std = 0.05, # Body height should not deviate too much from the stance_height
             contact_pattern = robot.contact_pattern
         )
         # Generate control input matrix
@@ -502,13 +524,16 @@ if __name__ == "__main__":
         kalman_filter.predict(u = np.array([1]), B = B)
         kalman_filter.update(z = z)
         # Update robot's velocity attribute with KF estimate
-        robot.body_velocity = np.array(
-            [
-                float(kalman_filter.x.reshape(18)[3]),
-                float(kalman_filter.x.reshape(18)[4]),
-                float(kalman_filter.x.reshape(18)[5])
-            ]
-        )
+        robot.body_velocity = (
+            quat2mat(np.roll(imu.quaternion_vals, 1)).T
+            @ np.array(
+                [
+                    float(kalman_filter.x.reshape(18)[3]),
+                    float(kalman_filter.x.reshape(18)[4]),
+                    float(kalman_filter.x.reshape(18)[5])
+                ]
+            ).reshape(3, 1)
+        ).reshape(3)
         ### Collecting and formatting data for collection ###
         # Getting true values
         t = sim_time_elapsed
@@ -687,9 +712,11 @@ if __name__ == "__main__":
         data_logger_vpsp.data_dict["BL_vt_y"] = robot.vpsp_vertices[1, 2]
         data_logger_vpsp.data_dict["BR_vt_x"] = robot.vpsp_vertices[0, 3]
         data_logger_vpsp.data_dict["BR_vt_y"] = robot.vpsp_vertices[1, 3]
+        data_logger_vpsp.data_dict["FL_phase"] = robot.contact_pattern[0]
+        data_logger_vpsp.data_dict["FR_phase"] = robot.contact_pattern[1]
+        data_logger_vpsp.data_dict["BL_phase"] = robot.contact_pattern[2]
+        data_logger_vpsp.data_dict["BR_phase"] = robot.contact_pattern[3]
 
         # Write data #
         data_logger_kf.writeData()
         data_logger_vpsp.writeData()
-
-    input()

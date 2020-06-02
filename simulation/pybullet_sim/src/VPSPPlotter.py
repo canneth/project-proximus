@@ -2,8 +2,11 @@
 import csv
 from pathlib import Path
 import matplotlib.pyplot as plt
+from matplotlib.markers import MarkerStyle
 from matplotlib.animation import FuncAnimation
 import numpy as np
+
+from PyplotPlayer import PyplotPlayer
 
 if __name__ == "__main__":
     # Load data from csv
@@ -21,6 +24,7 @@ if __name__ == "__main__":
     # Prepare data
     data = csv_data
     # data = np.delete(csv_data, slice(0, 200), axis = 0)
+    t = data[:, 0].reshape(-1, 1).reshape(-1, 1)
     p_b_vpsp_x = data[:, 1].reshape(-1, 1)
     p_b_vpsp_y = data[:, 2].reshape(-1, 1)
     FL_cw_vp_x = data[:, 3].reshape(-1, 1)
@@ -47,6 +51,10 @@ if __name__ == "__main__":
     BL_vt_y = data[:, 24].reshape(-1, 1)
     BR_vt_x = data[:, 25].reshape(-1, 1)
     BR_vt_y = data[:, 26].reshape(-1, 1)
+    FL_phase = data[:, 27].reshape(-1, 1)
+    FR_phase = data[:, 28].reshape(-1, 1)
+    BL_phase = data[:, 29].reshape(-1, 1)
+    BR_phase = data[:, 30].reshape(-1, 1)
     data_labels = [
         "p_b_vpsp",
         "FL_cw_vp",
@@ -80,18 +88,26 @@ if __name__ == "__main__":
     
     fig = plt.figure()
     ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
-    j = 0
     def draw_frame(i):
-        global j
 
-        print("j: {}".format(j))
         ax.clear()
-        ax.set_xlim(-0.5, 0.5)
-        ax.set_ylim(-0.3, 0.3)
+        ax.set_xlim(-0.6, 0.6)
+        ax.set_ylim(-0.5, 0.5)
         for data_label in list(data_dict.keys()):
-            x = data_dict[data_label][j, 0]
-            y = data_dict[data_label][j, 1]
-            ax.scatter(x, y)
+            x = data_dict[data_label][i, 0]
+            y = data_dict[data_label][i, 1]
+            # If associated leg is in swing, plot VPSP vertex as empty circle, else solid circle
+            if (data_label == "FL_vt" and FL_phase[i] == 0):
+                ax.scatter(x, y, facecolors = "none", edgecolors = "r", s = 100)
+            elif (data_label == "FR_vt" and FR_phase[i] == 0):
+                ax.scatter(x, y, facecolors = "none", edgecolors = "r", s = 100)
+            elif (data_label == "BL_vt" and BL_phase[i] == 0):
+                ax.scatter(x, y, facecolors = "none", edgecolors = "r", s = 100)
+            elif (data_label == "BR_vt" and BR_phase[i] == 0):
+                ax.scatter(x, y, facecolors = "none", edgecolors = "r", s = 100)
+            else:
+                ax.scatter(x, y)
+                pass
             ax.annotate(
                 data_label, # this is the text
                 (x, y), # this is the point to label
@@ -99,8 +115,7 @@ if __name__ == "__main__":
                 xytext = (0, 1), # distance from text to points (x,y)
                 ha = 'center' # horizontal alignment can be left, right or center
             )
-        # Every time the plot updates, increase time step counter j to the next time step
-        j += 1
+            plt.title("t: {}".format(t.reshape(-1)[i]), loc = "left")
 
-    ani = FuncAnimation(fig, draw_frame, interval = 50)
+    ani = PyplotPlayer(fig, draw_frame, maxi = len(data[:, 0]) - 1, interval = 100)
     plt.show()

@@ -56,7 +56,7 @@ class GaitController:
                 ticks_into_current_leg_phase = self.gait_config.gait_stance_duration_in_ticks + ticks_into_current_gait_phase
             elif (current_gait_phase_index == 2):
                 # FL is approaching end of its leg stance phase
-                ticks_into_current_leg_phase = 2*self.gait_config.gait_stance_duration_in_ticks + ticks_into_current_gait_phase
+                ticks_into_current_leg_phase = self.gait_config.gait_stance_duration_in_ticks + self.gait_config.gait_swing_duration_in_ticks + ticks_into_current_gait_phase
             elif (current_gait_phase_index == 3):
                 # FL is in its swing phase
                 ticks_into_current_leg_phase = ticks_into_current_gait_phase
@@ -64,7 +64,7 @@ class GaitController:
             # Front-right leg
             if (current_gait_phase_index == 0):
                 # FR is approaching end of its leg stance phase
-                ticks_into_current_leg_phase = 2*self.gait_config.gait_stance_duration_in_ticks + ticks_into_current_gait_phase
+                ticks_into_current_leg_phase = self.gait_config.gait_stance_duration_in_ticks + self.gait_config.gait_swing_duration_in_ticks + ticks_into_current_gait_phase
             elif (current_gait_phase_index == 1):
                 # FR is in its swing phase
                 ticks_into_current_leg_phase = ticks_into_current_gait_phase
@@ -78,7 +78,7 @@ class GaitController:
             # Back-left leg
             if (current_gait_phase_index == 0):
                 # BL is approaching end of its leg stance phase
-                ticks_into_current_leg_phase = 2*self.gait_config.gait_stance_duration_in_ticks + ticks_into_current_gait_phase
+                ticks_into_current_leg_phase = self.gait_config.gait_stance_duration_in_ticks + self.gait_config.gait_swing_duration_in_ticks + ticks_into_current_gait_phase
             elif (current_gait_phase_index == 1):
                 # BL is in its swing phase
                 ticks_into_current_leg_phase = ticks_into_current_gait_phase
@@ -98,7 +98,7 @@ class GaitController:
                 ticks_into_current_leg_phase = self.gait_config.gait_stance_duration_in_ticks + ticks_into_current_gait_phase
             elif (current_gait_phase_index == 2):
                 # BR is approaching end of its leg stance phase
-                ticks_into_current_leg_phase = 2*self.gait_config.gait_stance_duration_in_ticks + ticks_into_current_gait_phase
+                ticks_into_current_leg_phase = self.gait_config.gait_stance_duration_in_ticks + self.gait_config.gait_swing_duration_in_ticks + ticks_into_current_gait_phase
             elif (current_gait_phase_index == 3):
                 # BR is in its swing phase
                 ticks_into_current_leg_phase = ticks_into_current_gait_phase

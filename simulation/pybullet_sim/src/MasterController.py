@@ -21,7 +21,9 @@ class MasterController:
         trajectory_shape = FootTrajectory.TRIANGULAR,
         use_capture_point = False,
         use_vpsp = False,
-        use_tilt_stablisation = False
+        use_accel_capture_point = False,
+        use_rp_capture_point = False,
+        use_rp_rate_capture_point = False
     ):
 
         self.config = config
@@ -29,9 +31,11 @@ class MasterController:
         self.trajectory_shape = trajectory_shape
         self.use_capture_point = use_capture_point
         self.use_vpsp = use_vpsp
-        self.use_tilt_stablisation = use_tilt_stablisation
+        self.use_accel_capture_point = use_accel_capture_point
+        self.use_rp_capture_point = use_rp_capture_point
+        self.use_rp_rate_capture_point = use_rp_rate_capture_point
 
-        self.trot_controller = GaitController(config = config, gait = Gait.TROT)
+        self.trot_controller = GaitController(config = self.config, imu = self.imu, gait = Gait.TROT)
 
         self.ticks = 0
 
@@ -55,7 +59,7 @@ class MasterController:
         gait_controller.gait_config.swing_height = command.swing_height
         # Create leg controllers depending on gait_controller
         leg_stance_controller = LegStanceController(gait_config = gait_controller.gait_config)
-        leg_swing_controller = LegSwingController(gait_config = gait_controller.gait_config)
+        leg_swing_controller = LegSwingController(gait_config = gait_controller.gait_config, imu = self.imu)
         # Find phases of each leg (swing or stance)
         new_foot_locations_wrt_body = np.zeros((3, 4))
         contact_pattern = gait_controller.calculateContactPattern(self.ticks)
@@ -75,7 +79,10 @@ class MasterController:
                         leg_index = leg_index,
                         swing_proportion_completed = leg_swing_proportion_completed,
                         trajectory_shape = self.trajectory_shape,
-                        use_capture_point = self.use_capture_point
+                        use_capture_point = self.use_capture_point,
+                        use_accel_capture_point = self.use_accel_capture_point,
+                        use_rp_capture_point = self.use_rp_capture_point,
+                        use_rp_rate_capture_point = self.use_rp_rate_capture_point
                     )
                 )
                 foot_phase_proportions_completed[leg_index] = leg_swing_proportion_completed
@@ -89,7 +96,7 @@ class MasterController:
                 foot_phase_proportions_completed[leg_index] = leg_stance_proportion_completed
 
         raibert_td = leg_swing_controller.calculateRaibertTouchdownLocation(robot = robot, command = command, leg_index = 0)
-        capture_point = leg_swing_controller.calculateCapturePoint(robot = robot, command = command, leg_index = 0)
+        capture_point = leg_swing_controller.calculateCapturePoint(robot = robot, command = command)
 
         # np.set_printoptions(precision = 3, suppress = True)
         # print("FL FOOT:: Phase: {} | xyz: {} | Raibert TD: {} | Capture point: {} | Commanded TD: {}".format(
@@ -302,20 +309,6 @@ class MasterController:
                 new_foot_locations_wrt_body -= np.block(
                     [p_b_vpsp.reshape(3, 1), p_b_vpsp.reshape(3, 1), p_b_vpsp.reshape(3, 1), p_b_vpsp.reshape(3, 1)]
                 )
-            ###
-
-            ### APPLY SIMPLE TILT STABILISATION ###
-            # Construct foot rotation matrix to compensate for body tilt
-            q = np.roll(self.imu.quaternion_vals, 1)
-            (imu_roll, imu_pitch, imu_yaw) = quat2euler(q)
-            correction_factor = 0.1
-            max_tilt = 0.4
-            roll_compensation = correction_factor * np.clip(imu_roll, -max_tilt, max_tilt)
-            pitch_compensation = correction_factor * np.clip(imu_pitch, -max_tilt, max_tilt)
-            R_tilt_stabilisation = euler2mat(roll_compensation, pitch_compensation, 0)
-            # Apply transform on foot positions
-            if (self.use_tilt_stablisation):
-                new_foot_locations_wrt_body = R_tilt_stabilisation @ new_foot_locations_wrt_body
             ###
 
             # Update foot velocities in robot

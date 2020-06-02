@@ -60,7 +60,7 @@ class Leg:
         pybullet.changeDynamics(
             bodyUniqueId = self.robot_sim_id,
             linkIndex = self.tibia_joint_sim_id, # sim_id of link is the same as that of joint; this ensures little to no foot slippage
-            lateralFriction = 2.0
+            # lateralFriction = 1.0
         )
 
     def moveCoxaToAngle(self, angle):
