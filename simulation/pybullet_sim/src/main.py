@@ -452,7 +452,7 @@ if __name__ == "__main__":
     pybullet.setGravity(0, 0, -9.81)
     pybullet.setRealTimeSimulation(0) # Step simulation only when setpSimulation() is called
     initialisation_duration = 2
-    sim_duration = initialisation_duration + 20
+    sim_duration = initialisation_duration + 100
     sim_timestep = 1.0/240.0
 
     last_sim_timestep = 0
@@ -472,13 +472,71 @@ if __name__ == "__main__":
         # print("sim_time_elapsed: {}".format(sim_time_elapsed))
 
         if (sim_time_elapsed <= initialisation_duration + 3):
+            command.mode = Mode.REST
+            command.body_velocity = [0, 0, 0]
+            command.swing_height = 0.1
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 13):
+            # Walk forwards
+            command.mode = Mode.TROT
+            command.body_velocity = [0.4, 0, 0]
+            command.swing_height = 0.1
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 14):
+            # Trot on the spot
             command.mode = Mode.TROT
             command.body_velocity = [0, 0, 0]
             command.swing_height = 0.1
             master_controller.stepOnce(robot, command)
-        else:
+        elif (sim_time_elapsed <= initialisation_duration + 24):
             command.mode = Mode.TROT
-            command.body_velocity = [0.3, 0, 0]
+            command.body_velocity = [0, 0, 0]
+            command.swing_height = 0.1
+            command.gait_yaw_speed = np.radians(50)
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 25):
+            # Trot on the spot
+            command.mode = Mode.TROT
+            command.body_velocity = [0, 0, 0]
+            command.swing_height = 0.1
+            command.gait_yaw_speed = np.radians(0)
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 35):
+            # Walk to the left
+            command.mode = Mode.TROT
+            command.body_velocity = [0, 0.3, 0]
+            command.swing_height = 0.1
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 36):
+            # Trot on the spot
+            command.mode = Mode.TROT
+            command.body_velocity = [0, 0, 0]
+            command.swing_height = 0.1
+            command.gait_yaw_speed = np.radians(0)
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 46):
+            # Walk to the right while gait-yawing -30 degrees/s
+            command.mode = Mode.TROT
+            command.body_velocity = [0, -0.3, 0]
+            command.gait_yaw_speed = np.radians(-50)
+            command.swing_height = 0.1
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 47):
+            # Trot on the spot
+            command.mode = Mode.TROT
+            command.body_velocity = [0, 0, 0]
+            command.swing_height = 0.1
+            command.gait_yaw_speed = np.radians(0)
+            master_controller.stepOnce(robot, command)
+        elif (sim_time_elapsed <= initialisation_duration + 57):
+            # Walk to the backwards while gait-yawing 30 degrees/s
+            command.mode = Mode.TROT
+            command.body_velocity = [-0.4, 0, 0]
+            command.gait_yaw_speed = np.radians(50)
+            command.swing_height = 0.1
+            master_controller.stepOnce(robot, command)
+        else:
+            command.mode = Mode.REST
             command.swing_height = 0.1
             master_controller.stepOnce(robot, command)
 
