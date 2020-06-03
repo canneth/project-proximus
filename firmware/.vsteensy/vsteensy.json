@@ -14,9 +14,7 @@
       "copyCore": false,
       "sharedLibraries": [],
       "projectLibraries": [
-        "EigenArduino",
-        "PWMServo",
-        "STLport_v5_2_1"
+        "PWMServo"
       ],
       "board": {
         "name": "Teensy 4.0",

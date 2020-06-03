@@ -1,22 +1,19 @@
 
-// Ignore deprecation warnings from Eigen library
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs" 
-#include <Eigen30.h>
-#pragma GCC diagnostic pop
+#include <arm_math.h>
 
 #include <Arduino.h>
 
-#include "GlobalConstants.h"
 #include "ConvenienceFunctions.h"
-#include "TestClass.h"
+// #include "TestClass.h"
+
+#include "Matrix.h"
+
+#include "Robot.h"
 
 using namespace project_namespace;
-using namespace Eigen;
-
 // Global constants
 const uint8_t led_pin = 13;
+
 
 void setup() {
   Serial.begin(600000000);
@@ -24,19 +21,15 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(led_pin, LOW);
 
-  MatrixXd a(2, 2);
-  a << 1, 2,
-       3, 4;
-  MatrixXd b(2,2);
-  b << 2, 3,
-       1, 4;
-  a += b;
-
-  serialPrintMatrix(a);
-
+  Robot robot;
+  // digitalWrite(led_pin, LOW);
+  Serial.println("BEFORE:");
+  serialPrintMatrix(robot.test_mat);
+  robot.test_mat.src.pData[2] = 999;
+  Serial.println("AFTER: ");
+  serialPrintMatrix(robot.test_mat);
   digitalWrite(led_pin, HIGH);
 
-  delay(9999);
+  delay(1000);
 }

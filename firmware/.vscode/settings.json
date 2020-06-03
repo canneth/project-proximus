@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.txt": "ignore",
-        "core": "cpp"
+        "core": "cpp",
+        "complex": "cpp"
     }
 }

@@ -5,9 +5,7 @@
       "includePath": [
         "src/**",
         "C:\\Program Files (x86)\\Arduino\\hardware\\teensy\\avr\\cores\\teensy4",
-        "lib/EigenArduino/**",
-        "lib/PWMServo/**",
-        "lib/STLport_v5_2_1/**"
+        "lib/PWMServo/**"
       ],
       "forcedInclude": [],
       "defines": [
