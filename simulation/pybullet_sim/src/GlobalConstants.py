@@ -1,6 +1,11 @@
 
 from enum import Enum
 
+# For touchdown bias in LegSwingController
+forwards_alpha = 0.0
+backwards_alpha = 1.0
+lateral_alpha = 0.36
+
 # For linear_accel_capture_point, used in calculateNewFootLocation() in LegSwingController
 linear_accel_capture_point_gain = 0.05
 # For rp_capture_point, used in calculateNewFootLocation() in LegSwingController

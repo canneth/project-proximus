@@ -1,11 +1,15 @@
 
 
 from GlobalConstants import FootTrajectory
+
 from GlobalConstants import linear_accel_capture_point_gain
 from GlobalConstants import roll_gain
 from GlobalConstants import pitch_gain
 from GlobalConstants import roll_rate_gain
 from GlobalConstants import pitch_rate_gain
+from GlobalConstants import forwards_alpha
+from GlobalConstants import backwards_alpha
+from GlobalConstants import lateral_alpha
 
 import numpy as np
 from numpy import pi as PI
@@ -19,8 +23,17 @@ class LegSwingController:
     ):
         self.gait_config = gait_config
         self.imu = imu
-        self.alpha = 0.5 # Ratio between touchdown distance from neutral foot position and total xy planar body movement
-        self.beta = 0.5 # Ratio between touchdown distance from neutral foot position and total xy planar body movement
+        
+        # When walking both forwards and backwards, feet should be biased a little backwards to account for the assymetry in mass distribution
+        # along the antero-posterior axis, where COM is closer to the back legs.
+        # Hence, when walking forwards, alpha < 0.5 (opposite direction of movement); when walking backwards, alpha > 0.5 (in direction of movement).
+        # For walking forwards, alpha = 0.0 seems good? Although any difference between values < 0.5 is indiscernable.
+        # For walking backwards, alpha = 1.0 seems good? Although any difference between any values > 0.5 is indiscernable.
+
+        # When walking side-wards, feet should be biased a little opposite the direction of movement to effect body-lean into direction of movement.
+        # Hence, when walking side-wards, alpha < 0.5 (3.6 seems like a good value)
+        self.alpha = 0.5 # Ratio between touchdown distance from neutral foot position and total xy planar body movement; for gait translation.
+        self.beta = 0.5 # Ratio between touchdown distance from neutral foot position and total xy planar body movement; for gait yaw.
 
     def calculateRaibertTouchdownLocation(self, robot, command, leg_index):
         """
@@ -35,6 +48,14 @@ class LegSwingController:
         RETURNS:
         + touchdown_location: A (3,) array; the x, y, z coordinates of the touchdown location wrt body.
         """
+        # If gait translation involves both antero-posterior and lateral movement,
+        # alpha will be a vector sum of respective alphas in both directions, clipped within 0 and 1.
+        if (command.body_velocity[0] > 0): # Forwards velocity
+            self.alpha = np.clip(np.sqrt(lateral_alpha**2 + forwards_alpha**2), 0.0, 1.0)
+        elif (command.body_velocity[0] < 0):
+            self.alpha = np.clip(np.sqrt(lateral_alpha**2 + backwards_alpha**2), 0.0, 1.0)
+        else:
+            self.alpha = lateral_alpha
         touchdown_displacement_from_neutral_location = (
             np.dot(
                 self.alpha
@@ -55,6 +76,9 @@ class LegSwingController:
             projected_total_gait_yaw_rotation_matrix @ robot.foot_locations_wrt_body_at_rest[:, leg_index]
             + touchdown_displacement_from_neutral_location
         )
+
+        # print("alpha: {}".format(self.alpha))
+        
         return touchdown_location
 
     def calculateCapturePoint(self, robot, command):
