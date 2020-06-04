@@ -2,6 +2,8 @@
     "files.associations": {
         "*.txt": "ignore",
         "core": "cpp",
-        "complex": "cpp"
+        "complex": "cpp",
+        "cmath": "cpp",
+        "cstdlib": "cpp"
     }
 }

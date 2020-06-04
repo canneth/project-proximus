@@ -1,4 +1,5 @@
-.vsteensy/build/src/main.o: src/main.cpp \
+.vsteensy/build/src/MatrixPrinter.o: src/MatrixPrinter.cpp \
+ src/MatrixPrinter.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WProgram.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
@@ -109,5 +110,4 @@
  lib/Eigen/src/Core/VectorwiseOp.h lib/Eigen/src/Core/Random.h \
  lib/Eigen/src/Core/Replicate.h lib/Eigen/src/Core/Reverse.h \
  lib/Eigen/src/Core/ArrayWrapper.h lib/Eigen/src/Core/GlobalFunctions.h \
- lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/MatrixPrinter.h \
- src/Leg.h
+ lib/Eigen/src/Core/util/ReenableStupidWarnings.h
