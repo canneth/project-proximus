@@ -1,39 +1,6 @@
-.vsteensy/build/src/main.o: src/main.cpp \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WProgram.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/interrupt.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr_functions.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/wiring.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/binary.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/core_id.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/core_pins.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/imxrt.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/pins_arduino.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/HardwareSerial.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Stream.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Print.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WString.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Printable.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr_emulation.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_serial.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_desc.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_seremu.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_keyboard.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/keylayouts.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_mouse.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_joystick.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_midi.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_rawhid.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_flightsim.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_touch.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WCharacter.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/elapsedMillis.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
- C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/IntervalTimer.h \
- lib/Eigen/Eigen.h lib/Eigen/Core \
- lib/Eigen/src/Core/util/DisableStupidWarnings.h \
+.vsteensy/build/src/LegStanceController.o: src/LegStanceController.cpp \
+ src/LegStanceController.h src/GaitConfig.h lib/Eigen/Eigen.h \
+ lib/Eigen/Core lib/Eigen/src/Core/util/DisableStupidWarnings.h \
  lib/Eigen/src/Core/util/Macros.h lib/Eigen/src/Core/util/MKL_support.h \
  lib/Eigen/src/Core/util/Constants.h lib/Eigen/src/Core/util/Meta.h \
  lib/Eigen/src/Core/util/ForwardDeclarations.h \
@@ -109,6 +76,5 @@
  lib/Eigen/src/Core/VectorwiseOp.h lib/Eigen/src/Core/Random.h \
  lib/Eigen/src/Core/Replicate.h lib/Eigen/src/Core/Reverse.h \
  lib/Eigen/src/Core/ArrayWrapper.h lib/Eigen/src/Core/GlobalFunctions.h \
- lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/MatrixPrinter.h \
- src/GlobalConstants.h src/Config.h src/Robot.h src/Leg.h \
- src/GaitConfig.h
+ lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/GlobalConstants.h \
+ src/Config.h

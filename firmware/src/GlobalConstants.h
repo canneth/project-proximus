@@ -8,5 +8,9 @@ namespace project_namespace {
         REST,
         TROT
     };
+
+    enum class Gait {
+        TROT
+    };
 }
 #endif

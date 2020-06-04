@@ -102,8 +102,8 @@ class Robot:
 
         self.foot_velocities_wrt_body = np.zeros((3, 4))
 
-        self.joint_angles = np.zeros((3, 4))
-        self.contact_pattern = np.ones((4)) # By default, all legs in stance
+        self.joint_angles = np.zeros((3, 4)) # Not used anywhere, mainly for easy access
+        self.contact_pattern = np.ones((4)) # Not used anywhere, only updated in MasterController; mainly for easy access
 
         self.p_b_vpsp = np.zeros((3))
         self.virtual_points = np.zeros((4, 2, 3))

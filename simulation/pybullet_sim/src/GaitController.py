@@ -11,7 +11,7 @@ class GaitController:
     ):
         self.gait = gait
         self.config = config
-        self.imu = imu
+        self.imu = imu # This doesn't need to be here
 
         self.gait_config = GaitConfig(config = self.config, gait = self.gait)
 
@@ -21,7 +21,7 @@ class GaitController:
         Calculates and returns the phase index of the gait that the robot is in given elapsed time in number of ticks.
 
         ARGUMENTS:
-        + ticks: An integer; The elapsed time in ticks, where 1 tick is 1s/dt. This value is maintained in, and thus should be obtained from, the robot object.
+        + ticks: An integer; The elapsed time into the current gait in ticks, where 1 tick is 1s/dt.
         
         RETURNS:
         + gait_phase_index: An integer; The phase index of the current phase of the gait.
@@ -32,6 +32,25 @@ class GaitController:
             tick_sum += self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
             if ticks_into_current_gait_cycle < tick_sum:
                 return gait_phase_index
+     
+    def calculateTicksIntoCurrentGaitPhase(self, ticks):
+        """
+        DESCRIPTION:
+        Calculates and returns the elapsed time, in ticks, from the beginning of the current phase of the gait (NOT LEG PHASE!!!).
+
+        ARGUMENTS:
+        + ticks: An integer; The elapsed time in ticks, where 1 tick is 1s/dt. This value is maintained in, and thus should be obtained from, the robot object.
+
+        RETURNS:
+        + ticks_into_current_phase: The elapsed time, in ticks, from the start of the current phase of the gait.
+        """
+        ticks_into_current_gait_cycle = ticks % self.gait_config.gait_cycle_duration_in_ticks
+        tick_sum = 0
+        for gait_phase_index in range(self.gait_config.gait_number_of_phases):
+            tick_sum += self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
+            if ticks_into_current_gait_cycle < tick_sum:
+                ticks_into_current_phase = ticks_into_current_gait_cycle - tick_sum + self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
+                return ticks_into_current_phase
 
     def calculateTicksIntoCurrentLegPhase(self, ticks, leg_index):
         """
@@ -40,7 +59,7 @@ class GaitController:
         specified by leg_index.
 
         ARGUMENTS:
-        + ticks: An integer; The elapsed time in ticks, where 1 tick is 1s/dt. This value is maintained in, and thus should be obtained from, the robot object.
+        + ticks: An integer; The elapsed time since the beginning of the gait in ticks where 1 tick is 1s/dt.
         + leg_index: An integer; The index of the leg to calculate for. {FL: 0, FR: 1, BL: 2, BR: 3}
 
         RETURNS:
@@ -108,25 +127,7 @@ class GaitController:
                     ticks_into_current_leg_phase = ticks_into_current_gait_phase
         
         return ticks_into_current_leg_phase
-     
-    def calculateTicksIntoCurrentGaitPhase(self, ticks):
-        """
-        DESCRIPTION:
-        Calculates and returns the elapsed time, in ticks, from the beginning of the current phase of the gait (NOT LEG PHASE!!!).
 
-        ARGUMENTS:
-        + ticks: An integer; The elapsed time in ticks, where 1 tick is 1s/dt. This value is maintained in, and thus should be obtained from, the robot object.
-
-        RETURNS:
-        + ticks_into_current_phase: The elapsed time, in ticks, from the start of the current phase of the gait.
-        """
-        ticks_into_current_gait_cycle = ticks % self.gait_config.gait_cycle_duration_in_ticks
-        tick_sum = 0
-        for gait_phase_index in range(self.gait_config.gait_number_of_phases):
-            tick_sum += self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
-            if ticks_into_current_gait_cycle < tick_sum:
-                ticks_into_current_phase = ticks_into_current_gait_cycle - tick_sum + self.gait_config.gait_phase_durations_in_ticks[gait_phase_index]
-                return ticks_into_current_phase
 
     def calculateContactPattern(self, ticks):
         """

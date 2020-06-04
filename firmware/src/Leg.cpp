@@ -1,23 +1,14 @@
 
 #include "Leg.h"
 
+// This include fixes the output value for theta_1 in calcualteIKFoot() for some reason.
+// Without it, theta_1 always gets set to 1.57080, but with it it behaves as expected.
+// No idea why...
 #include <Arduino.h>
 
 using namespace project_namespace;
 
 // CONSTRUCTORS
-Leg::Leg():
-    // INITIALISATION LIST
-    d_x(0.0),
-    d_y(0.0),
-    d_j2_j1_bx(0.0),
-    d_j2_j1_by(0.0),
-    l_2(0.0),
-    l_3(0.0),
-    joint_servo_directions(Eigen::Vector3i::Ones()),
-    joint_angles(Eigen::Vector3f::Zero()),
-    foot_position_wrt_body(Eigen::Vector3f::Zero())
-{}
 Leg::Leg(
     float d_x_init,
     float d_y_init,
@@ -33,7 +24,10 @@ Leg::Leg(
     d_j2_j1_by(d_j2_j1_by_init),
     l_2(l_2_init),
     l_3(l_3_init),
-    joint_servo_directions(joint_servo_directions_init)
+    joint_servo_directions(joint_servo_directions_init),
+
+    joint_angles(Eigen::Vector3f::Zero()),
+    foot_position_wrt_body(Eigen::Vector3f::Zero())
 {}
 
 // GETTERS
@@ -45,6 +39,14 @@ Eigen::Vector3f Leg::getJointAngles() {
 }
 Eigen::Vector3f Leg::getFootPositionWrtBody() {
     return foot_position_wrt_body;
+}
+
+// SETTERS
+void Leg::setJointAngles(Eigen::Vector3f joint_angles_arg) {
+    joint_angles = joint_angles_arg;
+}
+void Leg::setFootPositionWrtBody(Eigen::Vector3f foot_position_wrt_body_arg) {
+    foot_position_wrt_body = foot_position_wrt_body_arg;
 }
 
 // METHODS
@@ -90,6 +92,34 @@ Eigen::Vector3f Leg::calculateIKFoot(Eigen::Vector3f foot_pos) {
     joint_angles(2) = theta_3;
 
     return joint_angles;
+}
 
-    
+void Leg::moveLegToJointAngles(Eigen::Vector3f joint_angles_cmd) {
+    /*
+    DESCRIPTION:
+    Moves all joints in the leg to the angles specified in joint_angles.
+
+    ARGUMENTS:
+    + joint_angles_cmd: The commanded joint angles. {coxa: theta_1, femur: theta_2, tibia: theta_3}.
+    */
+
+    joint_angles = joint_angles_cmd; // Update attribute
+    // TODO: Implement servo actuation here!!
+
+}
+
+void Leg::moveFoot(Eigen::Vector3f foot_pos) {
+    /*
+    DESCRIPTION:
+    Runs calculateIKFoot on given dest and sends a command to the simulator to
+    move the foot to the calculated joint angles. Updates own joint angle and
+    foot location attributes.
+
+    ARGUMENTS:
+    + foot_pos: The destination coordinates [x, y, z] of the foot.
+    */
+
+    calculateIKFoot(foot_pos);
+    setFootPositionWrtBody(foot_pos);
+    moveLegToJointAngles(joint_angles);
 }

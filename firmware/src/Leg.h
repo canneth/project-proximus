@@ -23,7 +23,6 @@ namespace project_namespace {
         protected:
         public:
             // CONSTRUCTORS
-            Leg();
             Leg(
                 float d_x_init,
                 float d_y_init,
@@ -37,8 +36,13 @@ namespace project_namespace {
             Eigen::Vector3i getJointServoDirections();
             Eigen::Vector3f getJointAngles();
             Eigen::Vector3f getFootPositionWrtBody();
+            // SETTERS
+            void setJointAngles(Eigen::Vector3f joint_angles_arg);
+            void setFootPositionWrtBody(Eigen::Vector3f foot_position_wrt_body_arg);
             // METHODS
             Eigen::Vector3f calculateIKFoot(Eigen::Vector3f foot_pos);
+            void moveLegToJointAngles(Eigen::Vector3f joint_angles_cmd);
+            void moveFoot(Eigen::Vector3f foot_pos);
     };
 
 }

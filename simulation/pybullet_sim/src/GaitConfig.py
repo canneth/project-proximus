@@ -40,7 +40,7 @@ class GaitConfig:
                     self.gait_swing_duration_in_ticks
                 ]
             )
-            self.swing_height = 0.0
+            self.swing_height = 0.0 # This doesn't need to be here, it is only accessed by LegSwingController.
             
-            self.leg_swing_duration_in_ticks = self.gait_swing_duration_in_ticks
             self.leg_stance_duration_in_ticks = 2*self.gait_stance_duration_in_ticks + self.gait_swing_duration_in_ticks
+            self.leg_swing_duration_in_ticks = self.gait_swing_duration_in_ticks

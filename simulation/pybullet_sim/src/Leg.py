@@ -183,9 +183,6 @@ class Leg:
 
         ARGUMENTS:
         + dest: A size 3 iterable; the destination coordinates [x, y, z] of the foot.
-
-        RETURNS:
-        -nothing-
         """
         self.ikFoot(dest)
         self.foot_location_wrt_body = np.array(dest).reshape(3)
