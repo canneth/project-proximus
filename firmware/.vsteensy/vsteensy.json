@@ -14,7 +14,8 @@
       "copyCore": false,
       "sharedLibraries": [],
       "projectLibraries": [
-        "PWMServo"
+        "PWMServo",
+        "Eigen"
       ],
       "board": {
         "name": "Teensy 4.0",
