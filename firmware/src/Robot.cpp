@@ -66,6 +66,41 @@ Robot::Robot():
     contact_pattern(Eigen::Vector4i::Zero())
 {}
 
+// GETTERS
+float Robot::getStancePolygonLength() {
+    return stance_polygon_length;
+}
+float Robot::getPolygonWidth() {
+    return stance_polygon_width;
+}
+float Robot::getStanceHeight() {
+    return stance_height;
+}
+float Robot::getBodyRoll() {
+    return body_roll;
+}
+float Robot::getBodyPitch() {
+    return body_pitch;
+}
+float Robot::getBodyYaw() {
+    return body_yaw;
+}
+Eigen::Matrix<float, 3, 4> Robot::getFootPositionsWrtBodyTrue() {
+    return foot_positions_wrt_body_true;
+}
+Eigen::Matrix<float, 3, 4> Robot::getFootPositionsWrtBodyAssumingNoBodyRPY() {
+    return foot_positions_wrt_body_assuming_no_body_rpy;
+}
+Eigen::Matrix<float, 3, 4> Robot::getFootPositionsWrtBodyAtRest() {
+    return foot_positions_wrt_body_at_rest;
+}
+Eigen::Matrix<float, 3, 4> Robot::getJointAngles() {
+    return joint_angles;
+}
+Eigen::Vector4i Robot::getContactPattern() {
+    return contact_pattern;
+}
+
 // SETTERS
 void Robot::setStancePolygonLength(float stance_polygon_length_arg) {
     stance_polygon_length = stance_polygon_length_arg;

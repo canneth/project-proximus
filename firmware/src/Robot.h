@@ -36,6 +36,19 @@ namespace project_namespace {
             // CONSTRUCTORS
             Robot();
 
+            // GETTERS
+            float getStancePolygonLength();
+            float getPolygonWidth();
+            float getStanceHeight();
+            float getBodyRoll();
+            float getBodyPitch();
+            float getBodyYaw();
+            Eigen::Matrix<float, 3, 4> getFootPositionsWrtBodyTrue();
+            Eigen::Matrix<float, 3, 4> getFootPositionsWrtBodyAssumingNoBodyRPY();
+            Eigen::Matrix<float, 3, 4> getFootPositionsWrtBodyAtRest();
+            Eigen::Matrix<float, 3, 4> getJointAngles();
+            Eigen::Vector4i getContactPattern();
+
             // SETTERS
             void setStancePolygonLength(float stance_polygon_length_arg);
             void setPolygonWidth(float stance_polygon_width_arg);

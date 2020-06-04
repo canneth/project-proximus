@@ -1,5 +1,5 @@
-.vsteensy/build/src/LegStanceController.o: src/LegStanceController.cpp \
- src/LegStanceController.h lib/Eigen/Eigen.h lib/Eigen/Core \
+.vsteensy/build/src/Command.o: src/Command.cpp src/Command.h \
+ lib/Eigen/Eigen.h lib/Eigen/Core \
  lib/Eigen/src/Core/util/DisableStupidWarnings.h \
  lib/Eigen/src/Core/util/Macros.h lib/Eigen/src/Core/util/MKL_support.h \
  lib/Eigen/src/Core/util/Constants.h lib/Eigen/src/Core/util/Meta.h \
@@ -76,31 +76,4 @@
  lib/Eigen/src/Core/VectorwiseOp.h lib/Eigen/src/Core/Random.h \
  lib/Eigen/src/Core/Replicate.h lib/Eigen/src/Core/Reverse.h \
  lib/Eigen/src/Core/ArrayWrapper.h lib/Eigen/src/Core/GlobalFunctions.h \
- lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/GaitConfig.h \
- src/GlobalConstants.h src/Config.h src/Robot.h src/Leg.h src/Command.h \
- src/MyMath.h lib/Eigen/Geometry lib/Eigen/Core lib/Eigen/SVD \
- lib/Eigen/QR lib/Eigen/Cholesky lib/Eigen/Jacobi \
- lib/Eigen/src/Jacobi/Jacobi.h lib/Eigen/src/Cholesky/LLT.h \
- lib/Eigen/src/Cholesky/LDLT.h lib/Eigen/Householder \
- lib/Eigen/src/Householder/Householder.h \
- lib/Eigen/src/Householder/HouseholderSequence.h \
- lib/Eigen/src/Householder/BlockHouseholder.h \
- lib/Eigen/src/QR/HouseholderQR.h lib/Eigen/src/QR/FullPivHouseholderQR.h \
- lib/Eigen/src/QR/ColPivHouseholderQR.h \
- lib/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
- lib/Eigen/src/misc/RealSvd2x2.h \
- lib/Eigen/src/SVD/UpperBidiagonalization.h lib/Eigen/src/SVD/SVDBase.h \
- lib/Eigen/src/SVD/JacobiSVD.h lib/Eigen/src/SVD/BDCSVD.h lib/Eigen/LU \
- lib/Eigen/src/misc/Kernel.h lib/Eigen/src/misc/Image.h \
- lib/Eigen/src/LU/FullPivLU.h lib/Eigen/src/LU/PartialPivLU.h \
- lib/Eigen/src/LU/Determinant.h lib/Eigen/src/LU/InverseImpl.h \
- lib/Eigen/src/Geometry/OrthoMethods.h \
- lib/Eigen/src/Geometry/EulerAngles.h \
- lib/Eigen/src/Geometry/Homogeneous.h \
- lib/Eigen/src/Geometry/RotationBase.h \
- lib/Eigen/src/Geometry/Rotation2D.h lib/Eigen/src/Geometry/Quaternion.h \
- lib/Eigen/src/Geometry/AngleAxis.h lib/Eigen/src/Geometry/Transform.h \
- lib/Eigen/src/Geometry/Translation.h lib/Eigen/src/Geometry/Scaling.h \
- lib/Eigen/src/Geometry/Hyperplane.h \
- lib/Eigen/src/Geometry/ParametrizedLine.h \
- lib/Eigen/src/Geometry/AlignedBox.h lib/Eigen/src/Geometry/Umeyama.h
+ lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/GlobalConstants.h

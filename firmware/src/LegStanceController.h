@@ -5,6 +5,9 @@
 #include <Eigen.h>
 
 #include "GaitConfig.h"
+#include "Robot.h"
+#include "Command.h"
+#include "MyMath.h"
 
 namespace project_namespace {
     class LegStanceController {
@@ -16,7 +19,7 @@ namespace project_namespace {
             LegStanceController(GaitConfig gait_config_init);
             
             // METHODS
-            // TODO: YOU LEFT OFF HERE!
+            Eigen::Vector3f calculateNewFootLocation(Robot& robot, Command& command, int leg_index);
     };
 }
 #endif

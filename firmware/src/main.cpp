@@ -22,7 +22,6 @@ MatrixPrinter matrix_printer;
 float Config::dt = 0.01;
 Robot robot;
 
-
 void setup() {
     pinMode(led_pin, OUTPUT);
     Serial.begin(600000000);

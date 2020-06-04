@@ -1,18 +1,9 @@
 
-import pybullet
-
 import numpy as np
-
-from Robot import Robot
+from transforms3d.euler import euler2mat
 
 if __name__ == "__main__":
-    physics_client = pybullet.connect(pybullet.GUI)
-    pybullet.setPhysicsEngineParameter(enableFileCaching = 0)
-    robot = Robot()
-    joint_angles = robot.back_right_leg.ikFoot([-0.2, -0.1, -0.2])
-    print(joint_angles)
-    joint_angles = robot.back_right_leg.ikFoot([-0.15, 0, -0.1])
-    print(joint_angles)
+    print(euler2mat(np.radians(10), np.radians(20), np.radians(5)))
 
     """
     ##### IK TEST CASES #####

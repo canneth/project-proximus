@@ -99,15 +99,15 @@ SYMBOL TABLE:
 00000000 l       *UND*	00000000 hardware_init_hook
 00000000 l       *UND*	00000000 __libc_fini
 00000000 l       *UND*	00000000 __stack
-600016f8 l     F .text.progmem	00000008 __startup_late_hook_veneer
-60001700 l     F .text.progmem	00000008 ____libc_init_array_veneer
+600016f8 l     F .text.progmem	00000008 ____libc_init_array_veneer
+60001700 l     F .text.progmem	00000008 __usb_init_serialnumber_veneer
 60001708 l     F .text.progmem	00000008 __pwm_init_veneer
 60001710 l     F .text.progmem	00000008 __set_arm_clock_veneer
-60001718 l     F .text.progmem	00000008 __main_veneer
-60001720 l     F .text.progmem	00000008 __delay_veneer
-60001728 l     F .text.progmem	00000008 __usb_init_serialnumber_veneer
-60001730 l     F .text.progmem	00000008 __memset_veneer
-60001738 l     F .text.progmem	00000008 __startup_early_hook_veneer
+60001718 l     F .text.progmem	00000008 __startup_late_hook_veneer
+60001720 l     F .text.progmem	00000008 __startup_early_hook_veneer
+60001728 l     F .text.progmem	00000008 __memset_veneer
+60001730 l     F .text.progmem	00000008 __delay_veneer
+60001738 l     F .text.progmem	00000008 __main_veneer
 00001bb0 l     F .text.itcm	00000008 ___init_veneer
 00000cb4 g     F .text.itcm	0000000c usb_serial_available
 00000960 g     F .text.itcm	00000002 startup_default_late_hook
@@ -997,7 +997,7 @@ FLASHMEM void reset_PFD()
 600011d4:	str	r3, [r2, #8]
 
 	startup_early_hook();
-600011d6:	bl	60001738 <__startup_early_hook_veneer>
+600011d6:	bl	60001720 <__startup_early_hook_veneer>
 extern volatile uint32_t systick_millis_count;
 
 static inline uint32_t millis(void) __attribute__((always_inline, unused));
@@ -1018,18 +1018,18 @@ static inline uint32_t millis(void)
 600011ec:	bl	60001504 <tempmon_init>
 
 	startup_late_hook();
-600011f0:	bl	600016f8 <__startup_late_hook_veneer>
+600011f0:	bl	60001718 <__startup_late_hook_veneer>
 600011f4:	ldr	r3, [r4, #0]
 	while (millis() < 300) ; // wait at least 300ms before calling user code
 600011f6:	cmp.w	r3, #300	; 0x12c
 600011fa:	bcc.n	600011f4 <ResetHandler+0x1c0>
 	//printf("before C++ constructors\n");
 	__libc_init_array();
-600011fc:	bl	60001700 <____libc_init_array_veneer>
+600011fc:	bl	600016f8 <____libc_init_array_veneer>
 	//printf("after C++ constructors\n");
 	//printf("before setup\n");
 	main();
-60001200:	bl	60001718 <__main_veneer>
+60001200:	bl	60001738 <__main_veneer>
 60001204:	b.n	60001204 <ResetHandler+0x1d0>
 60001206:	nop
 60001208:	.word	0x400ac000
@@ -1466,7 +1466,7 @@ FLASHMEM void usb_init(void)
 		| PMU_REG_3P0_ENABLE_LINREG;
 
 	usb_init_serialnumber();
-600013d0:	bl	60001728 <__usb_init_serialnumber_veneer>
+600013d0:	bl	60001700 <__usb_init_serialnumber_veneer>
 
 	// assume PLL3 is already running - already done by usb_pll_start() in main.c
 
@@ -1596,7 +1596,7 @@ FLASHMEM void usb_init(void)
 		//printf("USBPHY1_CTRL=%08lX\n", USBPHY1_CTRL);
 		//printf("USB1_USBMODE=%08lX\n", USB1_USBMODE);
 		delay(25);
-6000142c:	bl	60001720 <__delay_veneer>
+6000142c:	bl	60001730 <__delay_veneer>
 	USBPHY1_PWD = 0;
 	//printf("USBPHY1_PWD=%08lX\n", USBPHY1_PWD);
 	//printf("USBPHY1_CTRL=%08lX\n", USBPHY1_CTRL);
@@ -1662,7 +1662,7 @@ FLASHMEM void usb_init(void)
 60001446:	str.w	r6, [r4, #424]	; 0x1a8
 	memset(endpoint_queue_head, 0, sizeof(endpoint_queue_head));
 6000144a:	mov.w	r2, #640	; 0x280
-6000144e:	bl	60001730 <__memset_veneer>
+6000144e:	bl	60001728 <__memset_veneer>
 	endpoint_queue_head[0].config = (64 << 16) | (1 << 15);
 60001452:	mov.w	r6, #4227072	; 0x408000
 	endpoint_queue_head[1].config = (64 << 16);
@@ -2255,13 +2255,13 @@ FLASHMEM void tempmon_init(void)
 600016f2:	bx	lr
 600016f4:			; <UNDEFINED> instruction: 0xffffffff
 
-600016f8 <__startup_late_hook_veneer>:
-600016f8:	ldr.w	pc, [pc]	; 600016fc <__startup_late_hook_veneer+0x4>
-600016fc:	.word	0x00000961
+600016f8 <____libc_init_array_veneer>:
+600016f8:	ldr.w	pc, [pc]	; 600016fc <____libc_init_array_veneer+0x4>
+600016fc:	.word	0x00001ac5
 
-60001700 <____libc_init_array_veneer>:
-60001700:	ldr.w	pc, [pc]	; 60001704 <____libc_init_array_veneer+0x4>
-60001704:	.word	0x00001ac5
+60001700 <__usb_init_serialnumber_veneer>:
+60001700:	ldr.w	pc, [pc]	; 60001704 <__usb_init_serialnumber_veneer+0x4>
+60001704:	.word	0x000018c1
 
 60001708 <__pwm_init_veneer>:
 60001708:	ldr.w	pc, [pc]	; 6000170c <__pwm_init_veneer+0x4>
@@ -2271,25 +2271,25 @@ FLASHMEM void tempmon_init(void)
 60001710:	ldr.w	pc, [pc]	; 60001714 <__set_arm_clock_veneer+0x4>
 60001714:	.word	0x00000cc1
 
-60001718 <__main_veneer>:
-60001718:	ldr.w	pc, [pc]	; 6000171c <__main_veneer+0x4>
-6000171c:	.word	0x00000685
+60001718 <__startup_late_hook_veneer>:
+60001718:	ldr.w	pc, [pc]	; 6000171c <__startup_late_hook_veneer+0x4>
+6000171c:	.word	0x00000961
 
-60001720 <__delay_veneer>:
-60001720:	ldr.w	pc, [pc]	; 60001724 <__delay_veneer+0x4>
-60001724:	.word	0x00000281
+60001720 <__startup_early_hook_veneer>:
+60001720:	ldr.w	pc, [pc]	; 60001724 <__startup_early_hook_veneer+0x4>
+60001724:	.word	0x0000095d
 
-60001728 <__usb_init_serialnumber_veneer>:
-60001728:	ldr.w	pc, [pc]	; 6000172c <__usb_init_serialnumber_veneer+0x4>
-6000172c:	.word	0x000018c1
+60001728 <__memset_veneer>:
+60001728:	ldr.w	pc, [pc]	; 6000172c <__memset_veneer+0x4>
+6000172c:	.word	0x00001b15
 
-60001730 <__memset_veneer>:
-60001730:	ldr.w	pc, [pc]	; 60001734 <__memset_veneer+0x4>
-60001734:	.word	0x00001b15
+60001730 <__delay_veneer>:
+60001730:	ldr.w	pc, [pc]	; 60001734 <__delay_veneer+0x4>
+60001734:	.word	0x00000281
 
-60001738 <__startup_early_hook_veneer>:
-60001738:	ldr.w	pc, [pc]	; 6000173c <__startup_early_hook_veneer+0x4>
-6000173c:	.word	0x0000095d
+60001738 <__main_veneer>:
+60001738:	ldr.w	pc, [pc]	; 6000173c <__main_veneer+0x4>
+6000173c:	.word	0x00000685
 
 60001740 <__init_array_start>:
 60001740:	.word	0x00000045
@@ -2403,9 +2403,9 @@ Disassembly of section .text.itcm:
 	...
 
 0000007c <setup>:
+
 float Config::dt = 0.01;
 Robot robot;
-
 
 void setup() {
     pinMode(led_pin, OUTPUT);
@@ -2471,9 +2471,9 @@ Robot robot;
       d0:	.word	0xbf004770
 
 000000d4 <project_namespace::Robot::Robot()>:
-    foot_locations_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
 
     joint_angles(Eigen::Matrix<float, 3, 4>::Zero()),
     contact_pattern(Eigen::Vector4i::Zero())
@@ -2500,9 +2500,9 @@ Robot::Robot():
       EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(Matrix, 3)
       m_storage.data()[0] = x;
       dc:	movs	r5, #1
-    foot_locations_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
 
     joint_angles(Eigen::Matrix<float, 3, 4>::Zero()),
     contact_pattern(Eigen::Vector4i::Zero())
@@ -2514,9 +2514,9 @@ using namespace project_namespace;
 // CONSTRUCTORS
 Robot::Robot():
       e0:	vpush	{d8-d12}
-    foot_locations_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
 
     joint_angles(Eigen::Matrix<float, 3, 4>::Zero()),
     contact_pattern(Eigen::Vector4i::Zero())
@@ -2528,9 +2528,9 @@ using namespace project_namespace;
 // CONSTRUCTORS
 Robot::Robot():
       e8:	sub	sp, #20
-    foot_locations_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
-    foot_locations_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_true(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_assuming_no_body_rpy(Eigen::Matrix<float, 3, 4>::Zero()),
+    foot_positions_wrt_body_at_rest(Eigen::Matrix<float, 3, 4>::Zero()),
 
     joint_angles(Eigen::Matrix<float, 3, 4>::Zero()),
     contact_pattern(Eigen::Vector4i::Zero())
