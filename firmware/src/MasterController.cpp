@@ -1,6 +1,8 @@
 
 #include "MasterController.h"
 
+#include "MatrixPrinter.h"
+
 using namespace project_namespace;
 
 // CONSTRUCTORS
@@ -65,12 +67,10 @@ void MasterController::stepOnce(Robot& robot, Command& command) {
         new_foot_positions_wrt_body = body_rpy_matrix.transpose()*new_foot_positions_wrt_body;
         // Move feet to calculated positions
         robot.moveAllFeet(new_foot_positions_wrt_body); // Foot positions, joint angles in Legs and Robot are internally updated.
-        // Update robot resting foot locations
-        robot.setFootPositionsWrtBodyAtRest(new_foot_positions_wrt_body);
         // Update robot attributes
-        robot.setStancePolygonLength(command.getStancePolygonLength());
-        robot.setStancePolygonWidth(command.getStancePolygonWidth());
-        robot.setStanceHeight(command.getStanceHeight());
+        robot.setStancePolygonLength(command.getStancePolygonLength()); // Resting foot locations are updated internally
+        robot.setStancePolygonWidth(command.getStancePolygonWidth()); // Resting foot locations are updated internally
+        robot.setStanceHeight(command.getStanceHeight()); // Resting foot locations are updated internally
         robot.setBodyRoll(command.getBodyRoll());
         robot.setBodyPitch(command.getBodyPitch());
         robot.setBodyYaw(command.getBodyYaw());
@@ -95,7 +95,9 @@ void MasterController::stepOnce(Robot& robot, Command& command) {
         // Move feet to calculated positions
         robot.moveAllFeet(new_foot_positions_wrt_body); // Foot positions (true), joint angles in Legs and Robot are internally updated.
         // Update robot attributes
-        robot.setStanceHeight(command.getStanceHeight());
+        robot.setStancePolygonLength(command.getStancePolygonLength()); // Resting foot locations are updated internally
+        robot.setStancePolygonWidth(command.getStancePolygonWidth()); // Resting foot locations are updated internally
+        robot.setStanceHeight(command.getStanceHeight()); // Resting foot locations are updated internally
         robot.setBodyRoll(command.getBodyRoll());
         robot.setBodyPitch(command.getBodyPitch());
         robot.setBodyYaw(command.getBodyYaw());

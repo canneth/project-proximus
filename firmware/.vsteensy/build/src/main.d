@@ -140,4 +140,7 @@
  lib/Eigen/src/Geometry/Translation.h lib/Eigen/src/Geometry/Scaling.h \
  lib/Eigen/src/Geometry/Hyperplane.h \
  lib/Eigen/src/Geometry/ParametrizedLine.h \
- lib/Eigen/src/Geometry/AlignedBox.h lib/Eigen/src/Geometry/Umeyama.h
+ lib/Eigen/src/Geometry/AlignedBox.h lib/Eigen/src/Geometry/Umeyama.h \
+ src/MasterController.h src/GaitController.h src/GaitConfig.h \
+ src/LegStanceController.h src/MyMath.h src/LegSwingController.h \
+ src/Parameters.h

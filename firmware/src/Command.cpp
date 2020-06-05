@@ -19,7 +19,7 @@ Command::Command():
     swing_height(0.1),
 
     mode(Mode::REST)
-{}
+{ }
 
 // GETTERS
 float Command::getStancePolygonLength() {

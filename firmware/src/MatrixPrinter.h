@@ -14,7 +14,7 @@ namespace project_namespace {
 
             // METHODS
             template<typename T>
-            void print(T matrix_to_print) {
+            static void print(T matrix_to_print) {
    
                 uint8_t num_of_rows = matrix_to_print.rows();
                 uint8_t num_of_cols = matrix_to_print.cols();

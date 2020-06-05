@@ -25,6 +25,7 @@ namespace project_namespace {
             Eigen::Matrix<float, 3, 4> joint_angles;
             Eigen::Vector4i contact_pattern;
 
+            void updateStancePolygon();
         protected:
         public:
             // PUBLIC ATTRIBUTES
@@ -64,6 +65,7 @@ namespace project_namespace {
 
             // METHODS
             void moveAllFeet(Eigen::Matrix<float, 3, 4> foot_positions_wrt_body);
+
 
 
 

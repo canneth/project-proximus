@@ -1,5 +1,6 @@
 
 #include "GaitController.h"
+#include "MatrixPrinter.h"
 
 using namespace project_namespace;
 
@@ -34,6 +35,7 @@ int GaitController::calculateGaitPhaseIndex(int ticks) {
         tick_sum += gait_config.getGaitPhaseDurationsInTicks()(i);
         if (ticks_into_current_gait_cycle < tick_sum) {
             gait_phase_index = i;
+            break;
         }
     }
     assert ((gait_phase_index >= 0) && (gait_phase_index <= gait_config.getGaitNumberOfPhases()));
@@ -53,17 +55,18 @@ int GaitController::calculateTicksIntoCurrentGaitPhase(int ticks) {
     + ticks_into_current_phase: The elapsed time, in ticks, from the start of the current phase of the gait.
     */
 
+    int ticks_into_current_phase = 999; // Initialise with impossible value, caught by assert later
     int ticks_into_current_gait_cycle = ticks % gait_config.getGaitCycleDurationInTicks();
     int tick_sum = 0;
-    int ticks_into_current_phase = 999; // Initialise with impossible value, caught by assert later
     for (int i = 0; i < gait_config.getGaitNumberOfPhases(); i++) {
         tick_sum += gait_config.getGaitPhaseDurationsInTicks()(i);
-        if (ticks_into_current_gait_cycle < tick_sum) {
+        if (tick_sum > ticks_into_current_gait_cycle) {
             ticks_into_current_phase =
                 ticks_into_current_gait_cycle
                 - tick_sum
                 + gait_config.getGaitPhaseDurationsInTicks()(i)
             ;
+            break;
         }
     }
     assert (
@@ -89,11 +92,10 @@ int GaitController::calculateTicksIntoCurrentLegPhase(int ticks, int leg_index) 
     RETURNS:
     + ticks_into_current_leg_phase: The number of ticks into the leg's own phase (NOT GAIT PHASE!!!).
     */
+    int ticks_into_current_leg_phase = 999; // Initialise with impossible value, caught by assert later
 
     int current_gait_phase_index = calculateGaitPhaseIndex(ticks);
     int ticks_into_current_gait_phase = calculateTicksIntoCurrentGaitPhase(ticks);
-    int ticks_into_current_leg_phase = 999; // Initialise with impossible value, caught by assert later
-
     if (gait == Gait::TROT) {
         if (leg_index == 0) {
             // Front-left leg
@@ -117,8 +119,7 @@ int GaitController::calculateTicksIntoCurrentLegPhase(int ticks, int leg_index) 
                 // FL is in its swing phase
                 ticks_into_current_leg_phase = ticks_into_current_gait_phase;
             }
-        }
-        if (leg_index == 1) {
+        } else if (leg_index == 1) {
             // Front-right leg
             if (current_gait_phase_index == 0) {
                 // FR is approaching end of its leg stance phase
@@ -140,8 +141,7 @@ int GaitController::calculateTicksIntoCurrentLegPhase(int ticks, int leg_index) 
                     + ticks_into_current_gait_phase
                 ;
             }
-        }
-        if (leg_index == 2) {
+        } else if (leg_index == 2) {
             // Back-left leg
             if (current_gait_phase_index == 0) {
                 // BL is approaching end of its leg stance phase
@@ -163,8 +163,7 @@ int GaitController::calculateTicksIntoCurrentLegPhase(int ticks, int leg_index) 
                     + ticks_into_current_gait_phase
                 ;
             }
-        }
-        if (leg_index == 3) {
+        } else if (leg_index == 3) {
             // Back-right leg
             if (current_gait_phase_index == 0) {
                 // BR is just starting its leg stance phase
@@ -192,7 +191,7 @@ int GaitController::calculateTicksIntoCurrentLegPhase(int ticks, int leg_index) 
         (ticks_into_current_leg_phase >= 0)
         && (ticks_into_current_leg_phase <= gait_config.getLegStanceDurationInTicks())
     ); // leg stance duration is always longer than swing stance duration
-    
+
     return ticks_into_current_leg_phase;
 }
 
@@ -217,7 +216,6 @@ Eigen::Vector4i GaitController::calculateContactPattern(int ticks) {
     return contact_pattern;
 }
 
-
 Eigen::Matrix<float, 3, 4> GaitController::calculateAllNewFootPositions(Robot& robot, Command& command, int ticks) {
     /*
     DESCRIPTION:
@@ -240,14 +238,15 @@ Eigen::Matrix<float, 3, 4> GaitController::calculateAllNewFootPositions(Robot& r
     // Find phases of each leg (swing or stance)
     Eigen::Vector4i contact_pattern(0, 0, 0, 0);
     contact_pattern = calculateContactPattern(ticks);
+
     Eigen::Vector4f foot_phase_proportions_completed(0.0, 0.0, 0.0, 0.0);
     for (int leg_index = 0; leg_index < 4; leg_index++) {
         int leg_phase = contact_pattern(leg_index); // 0 = swing, 1 = stance
         if (leg_phase == 0) {
             // Leg is in swing phase
             float leg_swing_proportion_completed =
-                calculateTicksIntoCurrentLegPhase(ticks, leg_index)
-                / gait_config.getLegSwingDurationInTicks()
+                float(calculateTicksIntoCurrentLegPhase(ticks, leg_index))
+                / float(gait_config.getLegSwingDurationInTicks())
             ;
             new_foot_positions_wrt_body.col(leg_index) =
                 leg_swing_controller.calculateNewFootPosition(
@@ -262,8 +261,8 @@ Eigen::Matrix<float, 3, 4> GaitController::calculateAllNewFootPositions(Robot& r
         } else if (leg_phase == 1) {
             // Leg is in stance phase
             float leg_stance_proportion_completed =
-                calculateTicksIntoCurrentLegPhase(ticks, leg_index)
-                / gait_config.getLegStanceDurationInTicks()
+                float(calculateTicksIntoCurrentLegPhase(ticks, leg_index))
+                / float(gait_config.getLegStanceDurationInTicks())
             ;
             new_foot_positions_wrt_body.col(leg_index) =
                 leg_stance_controller.calculateNewFootPosition(robot, command, leg_index)

@@ -141,4 +141,5 @@
  lib/Wire/Wire.h lib/Wire/WireIMXRT.h lib/SPI/SPI.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/DMAChannel.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/EventResponder.h \
- src/Robot.h src/Leg.h src/Command.h src/Parameters.h src/MyMath.h
+ src/Robot.h src/Leg.h src/Command.h src/Parameters.h src/MyMath.h \
+ src/MatrixPrinter.h

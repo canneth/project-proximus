@@ -1,5 +1,6 @@
 
 #include "LegSwingController.h"
+#include "MatrixPrinter.h"
 
 using namespace project_namespace;
 
@@ -156,17 +157,18 @@ Eigen::Vector3f LegSwingController::calculateNewFootPosition(
     + trajectory_shape: The shape of the trajectory of the foot.
 
     RETURNS:
-    + new_foot_pocation:The x, y, z coordinates of the new foot position (wrt body, in body frame)
+    + new_foot_position:The x, y, z coordinates of the new foot position (wrt body, in body frame)
     after a single tick.
     */
 
-    Eigen::Vector3f new_foot_pocation(0.0, 0.0, 0.0); // Initialise
+    Eigen::Vector3f new_foot_position(0.0, 0.0, 0.0); // Initialise
 
     assert(swing_proportion_completed >= 0 && swing_proportion_completed <= 1);
     Eigen::Vector3f current_foot_location_assuming_no_body_rpy(0.0, 0.0, 0.0);
     current_foot_location_assuming_no_body_rpy = robot.getFootPositionsWrtBodyAssumingNoBodyRPY().col(leg_index);
     Eigen::Vector3f raibert_touchdown_location(0.0, 0.0, 0.0);
     raibert_touchdown_location = calculateRaibertTouchdownLocation(robot, command, leg_index);
+
     Eigen::Vector3f touchdown_location(0.0, 0.0, 0.0);
     touchdown_location = raibert_touchdown_location;
 
@@ -214,8 +216,8 @@ Eigen::Vector3f LegSwingController::calculateNewFootPosition(
             z_from_ground = gait_config.getSwingHeight()*(1.0 - swing_proportion_completed);
         }
     }
-    new_foot_pocation = current_foot_location_assuming_no_body_rpy + foot_delta_p;
-    new_foot_pocation(2) = -command.getStanceHeight() + z_from_ground;
+    new_foot_position = current_foot_location_assuming_no_body_rpy + foot_delta_p;
+    new_foot_position(2) = -command.getStanceHeight() + z_from_ground;
 
-    return new_foot_pocation;
+    return new_foot_position;
 }
