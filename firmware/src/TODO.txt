@@ -1,0 +1,7 @@
+
+LAST UPDATE: 5/6/2020
+
+TODO:
+
++ Test IMU data acquisition from BNO080 when hardware arrives.
++ ALL CODE IS UNTESTED except for the IK algorithm, that outputs the correct values.

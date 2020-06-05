@@ -8,7 +8,7 @@ namespace project_namespace {
         private:
         protected:
         public:
-            static float dt;
+            static constexpr float dt = 0.01;
     };
 }
 #endif

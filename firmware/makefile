@@ -7,7 +7,7 @@
 # Optimize           Faster
 # Keyboard Layout    US English
 #
-# 4/6/2020 08:36
+# 5/6/2020 18:34
 #******************************************************************************
 SHELL            := cmd.exe
 export SHELL
@@ -21,7 +21,7 @@ LIBS_SHARED_BASE := C:\Users\User\Documents\Arduino\libraries
 LIBS_SHARED      := 
 
 LIBS_LOCAL_BASE  := lib
-LIBS_LOCAL       := PWMServo Eigen 
+LIBS_LOCAL       := Eigen PWMServo SparkFun_BNO080_Arduino_Library Wire SPI 
 
 CORE_BASE        := C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4
 GCC_BASE         := C:\PROGRA~2\Arduino\hardware\tools\arm\bin

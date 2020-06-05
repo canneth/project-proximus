@@ -5,9 +5,11 @@ using namespace project_namespace;
 
 // CONSTRUCTORS
 GaitConfig::GaitConfig(
-    Gait gait_init
+    Gait gait_init,
+    FootTrajectory foot_trajectory_init
 ):
     gait(gait_init),
+    foot_trajectory(foot_trajectory_init),
     // The following are initialised conditional upon gait_init
     gait_stance_duration(0.0),
     gait_swing_duration(0.0),
@@ -21,7 +23,7 @@ GaitConfig::GaitConfig(
     leg_swing_duration_in_ticks(0),
     swing_height(0.0)
 {
-    if (gait_init == Gait::TROT) {
+    if (gait == Gait::TROT) {
         gait_stance_duration = 0.02;
         gait_swing_duration = 0.15;
         contact_schedule << (
@@ -77,3 +79,7 @@ float GaitConfig::getSwingHeight() {
     return swing_height;
 }
 
+// SETTERS
+void GaitConfig::setSwingHeight(float swing_height_arg) {
+    swing_height = swing_height_arg;
+}

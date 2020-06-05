@@ -14,8 +14,11 @@
       "copyCore": false,
       "sharedLibraries": [],
       "projectLibraries": [
+        "Eigen",
         "PWMServo",
-        "Eigen"
+        "SparkFun_BNO080_Arduino_Library",
+        "Wire",
+        "SPI"
       ],
       "board": {
         "name": "Teensy 4.0",

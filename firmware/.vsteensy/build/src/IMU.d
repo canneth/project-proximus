@@ -75,4 +75,66 @@
  lib/Eigen/src/Core/VectorwiseOp.h lib/Eigen/src/Core/Random.h \
  lib/Eigen/src/Core/Replicate.h lib/Eigen/src/Core/Reverse.h \
  lib/Eigen/src/Core/ArrayWrapper.h lib/Eigen/src/Core/GlobalFunctions.h \
- lib/Eigen/src/Core/util/ReenableStupidWarnings.h
+ lib/Eigen/src/Core/util/ReenableStupidWarnings.h lib/Eigen/Geometry \
+ lib/Eigen/Core lib/Eigen/SVD lib/Eigen/QR lib/Eigen/Cholesky \
+ lib/Eigen/Jacobi lib/Eigen/src/Jacobi/Jacobi.h \
+ lib/Eigen/src/Cholesky/LLT.h lib/Eigen/src/Cholesky/LDLT.h \
+ lib/Eigen/Householder lib/Eigen/src/Householder/Householder.h \
+ lib/Eigen/src/Householder/HouseholderSequence.h \
+ lib/Eigen/src/Householder/BlockHouseholder.h \
+ lib/Eigen/src/QR/HouseholderQR.h lib/Eigen/src/QR/FullPivHouseholderQR.h \
+ lib/Eigen/src/QR/ColPivHouseholderQR.h \
+ lib/Eigen/src/QR/CompleteOrthogonalDecomposition.h \
+ lib/Eigen/src/misc/RealSvd2x2.h \
+ lib/Eigen/src/SVD/UpperBidiagonalization.h lib/Eigen/src/SVD/SVDBase.h \
+ lib/Eigen/src/SVD/JacobiSVD.h lib/Eigen/src/SVD/BDCSVD.h lib/Eigen/LU \
+ lib/Eigen/src/misc/Kernel.h lib/Eigen/src/misc/Image.h \
+ lib/Eigen/src/LU/FullPivLU.h lib/Eigen/src/LU/PartialPivLU.h \
+ lib/Eigen/src/LU/Determinant.h lib/Eigen/src/LU/InverseImpl.h \
+ lib/Eigen/src/Geometry/OrthoMethods.h \
+ lib/Eigen/src/Geometry/EulerAngles.h \
+ lib/Eigen/src/Geometry/Homogeneous.h \
+ lib/Eigen/src/Geometry/RotationBase.h \
+ lib/Eigen/src/Geometry/Rotation2D.h lib/Eigen/src/Geometry/Quaternion.h \
+ lib/Eigen/src/Geometry/AngleAxis.h lib/Eigen/src/Geometry/Transform.h \
+ lib/Eigen/src/Geometry/Translation.h lib/Eigen/src/Geometry/Scaling.h \
+ lib/Eigen/src/Geometry/Hyperplane.h \
+ lib/Eigen/src/Geometry/ParametrizedLine.h \
+ lib/Eigen/src/Geometry/AlignedBox.h lib/Eigen/src/Geometry/Umeyama.h \
+ lib/SparkFun_BNO080_Arduino_Library/SparkFun_BNO080_Arduino_Library.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WProgram.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/interrupt.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr_functions.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/wiring.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/binary.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/core_id.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/core_pins.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/imxrt.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/pins_arduino.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/HardwareSerial.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Stream.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Print.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WString.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Printable.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr_emulation.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_serial.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_desc.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_seremu.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_keyboard.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/keylayouts.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_mouse.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_joystick.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_midi.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_rawhid.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_flightsim.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/usb_touch.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WCharacter.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/elapsedMillis.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/IntervalTimer.h \
+ lib/Wire/Wire.h lib/Wire/WireIMXRT.h lib/SPI/SPI.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/DMAChannel.h \
+ C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/EventResponder.h

@@ -12,14 +12,14 @@
 namespace project_namespace {
     class LegStanceController {
         private:
-            GaitConfig gait_config;
+            GaitConfig& gait_config;
         protected:
         public:
             // CONSTRUCTORS
-            LegStanceController(GaitConfig gait_config_init);
+            LegStanceController(GaitConfig& gait_config_init);
             
             // METHODS
-            Eigen::Vector3f calculateNewFootLocation(Robot& robot, Command& command, int leg_index);
+            Eigen::Vector3f calculateNewFootPosition(Robot& robot, Command& command, int leg_index);
     };
 }
 #endif

@@ -5,8 +5,11 @@
       "includePath": [
         "src/**",
         "C:\\Program Files (x86)\\Arduino\\hardware\\teensy\\avr\\cores\\teensy4",
+        "lib/Eigen/**",
         "lib/PWMServo/**",
-        "lib/Eigen/**"
+        "lib/SparkFun_BNO080_Arduino_Library/**",
+        "lib/Wire/**",
+        "lib/SPI/**"
       ],
       "forcedInclude": [],
       "defines": [

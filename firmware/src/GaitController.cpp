@@ -4,10 +4,14 @@
 using namespace project_namespace;
 
 // CONSTRUCTORS
-GaitController::GaitController(Gait gait_init):
+GaitController::GaitController(Gait gait_init, FootTrajectory trajectory_shape_init, IMU& imu_init):
     gait(gait_init),
-    gait_config(GaitConfig(gait_init))
-{}
+    trajectory_shape(trajectory_shape_init),
+    imu(imu_init),
+    gait_config(GaitConfig(gait, trajectory_shape)),
+    leg_stance_controller(LegStanceController(gait_config)),
+    leg_swing_controller(LegSwingController(gait_config, imu))
+{ }
 
 // METHODS
 int GaitController::calculateGaitPhaseIndex(int ticks) {
@@ -211,4 +215,62 @@ Eigen::Vector4i GaitController::calculateContactPattern(int ticks) {
     contact_pattern = gait_config.getContactSchedule().col(current_gait_phase_index);
 
     return contact_pattern;
+}
+
+
+Eigen::Matrix<float, 3, 4> GaitController::calculateAllNewFootPositions(Robot& robot, Command& command, int ticks) {
+    /*
+    DESCRIPTION:
+    Calculates all foot positions for the current tick.
+
+    ARGUMENTS:
+    + robot: The robot to control.
+    + command: The command from which command values are drawn.
+    + ticks: The time elapsed since the beginning of the gait, in ticks.
+
+    RETURNS:
+    + new_foot_positions_wrt_body: The new foot positions, wrt body in the body frame,
+     in a 3x4 matrix, where each column represents a foot. [FL, FR, BL, BR].
+    */
+
+    Eigen::Matrix<float, 3, 4> new_foot_positions_wrt_body; // Initialise
+
+    // Update swing_height in gait_config from command
+    gait_config.setSwingHeight(command.getSwingHeight());
+    // Find phases of each leg (swing or stance)
+    Eigen::Vector4i contact_pattern(0, 0, 0, 0);
+    contact_pattern = calculateContactPattern(ticks);
+    Eigen::Vector4f foot_phase_proportions_completed(0.0, 0.0, 0.0, 0.0);
+    for (int leg_index = 0; leg_index < 4; leg_index++) {
+        int leg_phase = contact_pattern(leg_index); // 0 = swing, 1 = stance
+        if (leg_phase == 0) {
+            // Leg is in swing phase
+            float leg_swing_proportion_completed =
+                calculateTicksIntoCurrentLegPhase(ticks, leg_index)
+                / gait_config.getLegSwingDurationInTicks()
+            ;
+            new_foot_positions_wrt_body.col(leg_index) =
+                leg_swing_controller.calculateNewFootPosition(
+                    robot,
+                    command,
+                    leg_index,
+                    leg_swing_proportion_completed,
+                    trajectory_shape
+                )
+            ;
+            foot_phase_proportions_completed(leg_index) = leg_swing_proportion_completed;
+        } else if (leg_phase == 1) {
+            // Leg is in stance phase
+            float leg_stance_proportion_completed =
+                calculateTicksIntoCurrentLegPhase(ticks, leg_index)
+                / gait_config.getLegStanceDurationInTicks()
+            ;
+            new_foot_positions_wrt_body.col(leg_index) =
+                leg_stance_controller.calculateNewFootPosition(robot, command, leg_index)
+            ;
+            foot_phase_proportions_completed(leg_index) = leg_stance_proportion_completed;
+        }
+    }
+
+    return new_foot_positions_wrt_body;
 }

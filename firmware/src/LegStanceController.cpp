@@ -4,12 +4,12 @@
 using namespace project_namespace;
 
 // CONSTRUCTORS
-LegStanceController::LegStanceController(GaitConfig gait_config_init):
+LegStanceController::LegStanceController(GaitConfig& gait_config_init):
     gait_config(gait_config_init)
 {}
 
 // METHODS
-Eigen::Vector3f calculateNewFootLocation(Robot& robot, Command& command, int leg_index) {
+Eigen::Vector3f LegStanceController::calculateNewFootPosition(Robot& robot, Command& command, int leg_index) {
     /*
     DESCRIPTION:
     Calculates and returns the new foot position (wrt body) after a single tick.

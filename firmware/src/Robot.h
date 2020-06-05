@@ -38,7 +38,7 @@ namespace project_namespace {
 
             // GETTERS
             float getStancePolygonLength();
-            float getPolygonWidth();
+            float getStancePolygonWidth();
             float getStanceHeight();
             float getBodyRoll();
             float getBodyPitch();
@@ -51,7 +51,7 @@ namespace project_namespace {
 
             // SETTERS
             void setStancePolygonLength(float stance_polygon_length_arg);
-            void setPolygonWidth(float stance_polygon_width_arg);
+            void setStancePolygonWidth(float stance_polygon_width_arg);
             void setStanceHeight(float stance_height_arg);
             void setBodyRoll(float body_roll_arg);
             void setBodyPitch(float body_pitch_arg);

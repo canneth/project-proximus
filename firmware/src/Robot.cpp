@@ -70,7 +70,7 @@ Robot::Robot():
 float Robot::getStancePolygonLength() {
     return stance_polygon_length;
 }
-float Robot::getPolygonWidth() {
+float Robot::getStancePolygonWidth() {
     return stance_polygon_width;
 }
 float Robot::getStanceHeight() {
@@ -105,7 +105,7 @@ Eigen::Vector4i Robot::getContactPattern() {
 void Robot::setStancePolygonLength(float stance_polygon_length_arg) {
     stance_polygon_length = stance_polygon_length_arg;
 }
-void Robot::setPolygonWidth(float stance_polygon_width_arg) {
+void Robot::setStancePolygonWidth(float stance_polygon_width_arg) {
     stance_polygon_width = stance_polygon_width_arg;
 }
 void Robot::setStanceHeight(float stance_height_arg) {

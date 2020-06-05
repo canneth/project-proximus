@@ -12,5 +12,10 @@ namespace project_namespace {
     enum class Gait {
         TROT
     };
+
+    enum class FootTrajectory {
+        TRIANGULAR,
+        SEMICIRCULAR
+    };
 }
 #endif

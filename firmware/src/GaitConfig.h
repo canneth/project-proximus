@@ -5,12 +5,14 @@
 #include <Eigen.h>
 
 #include "GlobalConstants.h"
+
 #include "Config.h"
 
 namespace project_namespace {
     class GaitConfig {
         private:
             Gait gait;
+            FootTrajectory foot_trajectory;
 
             float gait_stance_duration;
             float gait_swing_duration;
@@ -28,7 +30,7 @@ namespace project_namespace {
         protected:
         public:
             // CONSTRUCTORS
-            GaitConfig(Gait gait_init);
+            GaitConfig(Gait gait_init, FootTrajectory foot_trajectory_init);
             // GETTERS
             Eigen::Matrix<int, 4, 4> getContactSchedule();
             int getGaitNumberOfPhases();
@@ -39,6 +41,8 @@ namespace project_namespace {
             int getLegStanceDurationInTicks();
             int getLegSwingDurationInTicks();
             float getSwingHeight();
+            // SETTERS
+            void setSwingHeight(float swing_height_arg);
     };
 }
 #endif
