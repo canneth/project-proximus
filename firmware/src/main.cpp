@@ -59,9 +59,9 @@ void setup() {
     //     Serial.println("BNO080 not detected at default I2C address. Check your jumpers and the hookup guide. Freezing...");
     //     while (1);
     // }
-    // // imu.imu_hardware.enableRotationVector(50); // For quaternion; send data update every 50ms
-    // // imu.imu_hardware.enableAccelerometer(50); // Send data update every 50ms
-    // imu.imu_hardware.enableGyro(50); // Send data update every 50ms
+    // // imu.imu_hardware.enableRotationVector(Config::dt*1000); // For quaternion; send data update every 50ms
+    // // imu.imu_hardware.enableLinearAccelerometer(Config::dt*1000); // Send data update every 50ms
+    // imu.imu_hardware.enableGyro(Config::dt*1000); // Send data update every 50ms
 }
 
 void loop() {

@@ -10,13 +10,14 @@ IMU::IMU(BNO080& imu_hardware_init):
 
 Eigen::Vector3f IMU::getAccel() {
     // TODO: TEST READING ACQUISITION FROM HARDWARE!!
+    // This returns the acceleration of the object with gravity reading removed!!
     float x = 0.0;
     float y = 0.0;
     float z = 0.0;
     if (imu_hardware.dataAvailable() == true) {
-        x = imu_hardware.getAccelX();
-        y = imu_hardware.getAccelY();
-        z = imu_hardware.getAccelZ();
+        x = imu_hardware.getLinAccelX();
+        y = imu_hardware.getLinAccelY();
+        z = imu_hardware.getLinAccelZ();
     }
     Eigen::Vector3f accel_vals(x, y, z);
     return accel_vals;
