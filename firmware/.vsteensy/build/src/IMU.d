@@ -101,7 +101,6 @@
  lib/Eigen/src/Geometry/Hyperplane.h \
  lib/Eigen/src/Geometry/ParametrizedLine.h \
  lib/Eigen/src/Geometry/AlignedBox.h lib/Eigen/src/Geometry/Umeyama.h \
- lib/SparkFun_BNO080_Arduino_Library/SparkFun_BNO080_Arduino_Library.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/WProgram.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/avr/pgmspace.h \
@@ -135,6 +134,7 @@
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/elapsedMillis.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/Arduino.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/IntervalTimer.h \
+ lib/SparkFun_BNO080_Arduino_Library/SparkFun_BNO080_Arduino_Library.h \
  lib/Wire/Wire.h lib/Wire/WireIMXRT.h lib/SPI/SPI.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/DMAChannel.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/EventResponder.h

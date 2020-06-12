@@ -455,6 +455,8 @@ if __name__ == "__main__":
     sim_duration = initialisation_duration + 100
     sim_timestep = 1.0/240.0
 
+    start_time_real = time.time()
+
     last_sim_timestep = 0
     for i in range(int(sim_duration/sim_timestep)):
         pybullet.stepSimulation()
@@ -463,6 +465,10 @@ if __name__ == "__main__":
         sim_time_elapsed = i*sim_timestep
         if (sim_time_elapsed <= initialisation_duration):
             continue
+        
+        real_time_elapsed = time.time() - start_time_real
+        print("Real-time : sim-time ratio: {}".format(real_time_elapsed/sim_time_elapsed))
+
 
         current_sim_timestep = i*sim_timestep
         sim_time_delta = current_sim_timestep - last_sim_timestep

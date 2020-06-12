@@ -3,6 +3,8 @@
 
 using namespace project_namespace;
 
+// TODO: Update dimensions according to CAD!!!
+
 // CONSTRUCTORS
 Robot::Robot():
     front_left_leg(

@@ -36,7 +36,6 @@ IMU imu(imu_hardware);
 MasterController master_controller(imu);
 
 long last_time = millis();
-boolean connected = false;
 
 char sprintf_buffer[255];
 
@@ -50,18 +49,18 @@ void setup() {
     pinMode(led_pin, OUTPUT);
     Serial.begin(600000000);
     
-    // // IMU SETUP
-    // Wire.begin();
-    // Wire.setClock(400000); // Increase I2C data rate to 400kHz
+    // IMU SETUP
+    Wire1.begin();
+    Wire1.setClock(400000); // Increase I2C data rate to 400kHz
     
-    // if (imu.imu_hardware.begin() == false)
-    // {
-    //     Serial.println("BNO080 not detected at default I2C address. Check your jumpers and the hookup guide. Freezing...");
-    //     while (1);
-    // }
-    // // imu.imu_hardware.enableRotationVector(Config::dt*1000); // For quaternion; send data update every 50ms
-    // // imu.imu_hardware.enableLinearAccelerometer(Config::dt*1000); // Send data update every 50ms
-    // imu.imu_hardware.enableGyro(Config::dt*1000); // Send data update every 50ms
+    if (imu.imu_hardware.begin(0x4B, Wire1) == false)
+    {
+        Serial.println("BNO080 not detected at default I2C address. Check your jumpers and the hookup guide. Freezing...");
+        while (1);
+    }
+    imu.imu_hardware.enableRotationVector(Config::dt*1000); // For quaternion; send data update every 50ms
+    imu.imu_hardware.enableLinearAccelerometer(Config::dt*1000); // Send data update every 50ms
+    imu.imu_hardware.enableGyro(Config::dt*1000); // Send data update every 50ms
 }
 
 void loop() {
@@ -77,7 +76,7 @@ void loop() {
     command.setBodyVelocity(Eigen::Vector3f(0.5, 0, 0));
     master_controller.stepOnce(robot, command);
 
-    // For serial logging purposes only
+    // // For serial logging purposes only
     // Eigen::Matrix<float, 3, 4> all_foot_positions;
     // all_foot_positions = robot.getFootPositionsWrtBodyTrue();
     // float FL_x = all_foot_positions.col(0)(0);
@@ -98,7 +97,5 @@ void loop() {
     //     FL_x, FL_y, FL_z, FR_x, FR_y, FR_z, BL_x, BL_y, BL_z, BR_x, BR_y, BR_z
     // );
     // Serial.println(sprintf_buffer);
-
-    // TODO: Log joint angles and feed into simulation to check movement!
 
 }
