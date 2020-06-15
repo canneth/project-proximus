@@ -5,6 +5,7 @@
 
 // Hardware libraries
 #include <SparkFun_BNO080_Arduino_Library.h>
+#include <PWMServo.h>
 
 // Math libraries
 #include <Eigen.h>
@@ -45,10 +46,11 @@ char sprintf_buffer[255];
 /////////////////////
 
 void setup() {
-    while(!Serial);
+    // while(!Serial);
     pinMode(led_pin, OUTPUT);
     Serial.begin(600000000);
     
+    /*
     // IMU SETUP
     Wire1.begin();
     Wire1.setClock(400000); // Increase I2C data rate to 400kHz
@@ -61,9 +63,12 @@ void setup() {
     imu.imu_hardware.enableRotationVector(Config::dt*1000); // For quaternion; send data update every 50ms
     imu.imu_hardware.enableLinearAccelerometer(Config::dt*1000); // Send data update every 50ms
     imu.imu_hardware.enableGyro(Config::dt*1000); // Send data update every 50ms
+    */
+
 }
 
 void loop() {
+
     long current_time = millis();
     long delta_time = current_time - last_time;
     if (delta_time < (long(Config::dt*1000))) {

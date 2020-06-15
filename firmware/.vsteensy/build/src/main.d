@@ -37,7 +37,7 @@
  lib/SPI/SPI.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/DMAChannel.h \
  C:\PROGRA~2\Arduino\hardware\teensy\avr\cores\teensy4/EventResponder.h \
- lib/Eigen/Eigen.h lib/Eigen/Core \
+ lib/PWMServo/PWMServo.h lib/Eigen/Eigen.h lib/Eigen/Core \
  lib/Eigen/src/Core/util/DisableStupidWarnings.h \
  lib/Eigen/src/Core/util/Macros.h lib/Eigen/src/Core/util/MKL_support.h \
  lib/Eigen/src/Core/util/Constants.h lib/Eigen/src/Core/util/Meta.h \
