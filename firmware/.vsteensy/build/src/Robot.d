@@ -75,4 +75,5 @@
  lib/Eigen/src/Core/VectorwiseOp.h lib/Eigen/src/Core/Random.h \
  lib/Eigen/src/Core/Replicate.h lib/Eigen/src/Core/Reverse.h \
  lib/Eigen/src/Core/ArrayWrapper.h lib/Eigen/src/Core/GlobalFunctions.h \
- lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/Leg.h
+ lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/Leg.h \
+ lib/PWMServo/PWMServo.h

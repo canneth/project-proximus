@@ -104,8 +104,9 @@ void Leg::moveLegToJointAngles(Eigen::Vector3f joint_angles_cmd) {
     */
 
     joint_angles = joint_angles_cmd; // Update attribute
-    // TODO: Implement servo actuation here!!
-
+    coxa_servo.write(degrees(joint_angles(0)));
+    femur_servo.write(degrees(joint_angles(1)));
+    tibia_servo.write(degrees(joint_angles(2)));
 }
 
 void Leg::moveFoot(Eigen::Vector3f foot_pos) {

@@ -78,11 +78,11 @@
  lib/Eigen/src/Core/ArrayWrapper.h lib/Eigen/src/Core/GlobalFunctions.h \
  lib/Eigen/src/Core/util/ReenableStupidWarnings.h src/GlobalConstants.h \
  src/GaitConfig.h src/Config.h src/LegStanceController.h src/Robot.h \
- src/Leg.h src/Command.h src/MyMath.h lib/Eigen/Geometry lib/Eigen/Core \
- lib/Eigen/SVD lib/Eigen/QR lib/Eigen/Cholesky lib/Eigen/Jacobi \
- lib/Eigen/src/Jacobi/Jacobi.h lib/Eigen/src/Cholesky/LLT.h \
- lib/Eigen/src/Cholesky/LDLT.h lib/Eigen/Householder \
- lib/Eigen/src/Householder/Householder.h \
+ src/Leg.h lib/PWMServo/PWMServo.h src/Command.h src/MyMath.h \
+ lib/Eigen/Geometry lib/Eigen/Core lib/Eigen/SVD lib/Eigen/QR \
+ lib/Eigen/Cholesky lib/Eigen/Jacobi lib/Eigen/src/Jacobi/Jacobi.h \
+ lib/Eigen/src/Cholesky/LLT.h lib/Eigen/src/Cholesky/LDLT.h \
+ lib/Eigen/Householder lib/Eigen/src/Householder/Householder.h \
  lib/Eigen/src/Householder/HouseholderSequence.h \
  lib/Eigen/src/Householder/BlockHouseholder.h \
  lib/Eigen/src/QR/HouseholderQR.h lib/Eigen/src/QR/FullPivHouseholderQR.h \

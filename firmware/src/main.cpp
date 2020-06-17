@@ -30,6 +30,20 @@ using namespace project_namespace;
 
 const int led_pin = 13;
 
+// Servo pins
+const int fl_coxa_servo_pin = 1;
+const int fl_femur_servo_pin = 2;
+const int fl_tibia_servo_pin = 3;
+const int fr_coxa_servo_pin = 4;
+const int fr_femur_servo_pin = 5;
+const int fr_tibia_servo_pin = 6;
+const int bl_coxa_servo_pin = 7;
+const int bl_femur_servo_pin = 8;
+const int bl_tibia_servo_pin = 9;
+const int br_coxa_servo_pin = 10;
+const int br_femur_servo_pin = 11;
+const int br_tibia_servo_pin = 12;
+
 Robot robot;
 Command command;
 BNO080 imu_hardware;
@@ -49,6 +63,20 @@ void setup() {
     // while(!Serial);
     pinMode(led_pin, OUTPUT);
     Serial.begin(600000000);
+
+    // TODO: Calibrate min/max pulse lengths!
+    robot.front_left_leg.coxa_servo.attach(fl_coxa_servo_pin);
+    robot.front_left_leg.femur_servo.attach(fl_femur_servo_pin);
+    robot.front_left_leg.tibia_servo.attach(fl_tibia_servo_pin);
+    robot.front_right_leg.coxa_servo.attach(fr_coxa_servo_pin);
+    robot.front_right_leg.femur_servo.attach(fr_femur_servo_pin);
+    robot.front_right_leg.tibia_servo.attach(fr_tibia_servo_pin);
+    robot.back_left_leg.coxa_servo.attach(bl_coxa_servo_pin);
+    robot.back_left_leg.femur_servo.attach(bl_femur_servo_pin);
+    robot.back_left_leg.tibia_servo.attach(bl_tibia_servo_pin);
+    robot.back_right_leg.coxa_servo.attach(br_coxa_servo_pin);
+    robot.back_right_leg.femur_servo.attach(br_femur_servo_pin);
+    robot.back_right_leg.tibia_servo.attach(br_tibia_servo_pin);
     
     /*
     // IMU SETUP
@@ -81,26 +109,26 @@ void loop() {
     command.setBodyVelocity(Eigen::Vector3f(0.5, 0, 0));
     master_controller.stepOnce(robot, command);
 
-    // // For serial logging purposes only
-    // Eigen::Matrix<float, 3, 4> all_foot_positions;
-    // all_foot_positions = robot.getFootPositionsWrtBodyTrue();
-    // float FL_x = all_foot_positions.col(0)(0);
-    // float FL_y = all_foot_positions.col(0)(1);
-    // float FL_z = all_foot_positions.col(0)(2);
-    // float FR_x = all_foot_positions.col(1)(0);
-    // float FR_y = all_foot_positions.col(1)(1);
-    // float FR_z = all_foot_positions.col(1)(2);
-    // float BL_x = all_foot_positions.col(2)(0);
-    // float BL_y = all_foot_positions.col(2)(1);
-    // float BL_z = all_foot_positions.col(2)(2);
-    // float BR_x = all_foot_positions.col(3)(0);
-    // float BR_y = all_foot_positions.col(3)(1);
-    // float BR_z = all_foot_positions.col(3)(2);
-    // sprintf(
-    //     sprintf_buffer,
-    //     "%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f",
-    //     FL_x, FL_y, FL_z, FR_x, FR_y, FR_z, BL_x, BL_y, BL_z, BR_x, BR_y, BR_z
-    // );
-    // Serial.println(sprintf_buffer);
+    // For serial logging purposes only
+    Eigen::Matrix<float, 3, 4> all_foot_positions;
+    all_foot_positions = robot.getFootPositionsWrtBodyTrue();
+    float FL_x = all_foot_positions.col(0)(0);
+    float FL_y = all_foot_positions.col(0)(1);
+    float FL_z = all_foot_positions.col(0)(2);
+    float FR_x = all_foot_positions.col(1)(0);
+    float FR_y = all_foot_positions.col(1)(1);
+    float FR_z = all_foot_positions.col(1)(2);
+    float BL_x = all_foot_positions.col(2)(0);
+    float BL_y = all_foot_positions.col(2)(1);
+    float BL_z = all_foot_positions.col(2)(2);
+    float BR_x = all_foot_positions.col(3)(0);
+    float BR_y = all_foot_positions.col(3)(1);
+    float BR_z = all_foot_positions.col(3)(2);
+    sprintf(
+        sprintf_buffer,
+        "%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f",
+        FL_x, FL_y, FL_z, FR_x, FR_y, FR_z, BL_x, BL_y, BL_z, BR_x, BR_y, BR_z
+    );
+    Serial.println(sprintf_buffer);
 
 }

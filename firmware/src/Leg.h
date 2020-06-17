@@ -3,6 +3,7 @@
 #define LEG_H
 
 #include <Eigen.h>
+#include <PWMServo.h>
 
 namespace project_namespace {
     
@@ -22,6 +23,10 @@ namespace project_namespace {
             Eigen::Vector3f foot_position_wrt_body;
         protected:
         public:
+            // PUBLIC MEMBERS
+            PWMServo coxa_servo;
+            PWMServo femur_servo;
+            PWMServo tibia_servo;
             // CONSTRUCTORS
             Leg(
                 float d_x_init,
